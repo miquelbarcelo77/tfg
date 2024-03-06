@@ -1,0 +1,176 @@
+<html>
+
+<head>
+    <title>Joc de Cuina | Miquel</title>
+    <script src="js/aframe.min.js"></script>
+    <script src="js/aframe-extras.min.js"></script>
+    <script src="js/aframe-physics-system.min.js"></script>
+    <script src="js/app.js"></script>
+</head>
+
+<body>
+    <a-scene physics="debug: true">
+        <a-assets>
+            <a-sound id="sound" src="assets/sounds/fallo.mp3" preload="auto"></a-sound>
+            <a-sound id="house" src="assets/sounds/house_lo.mp3" preload="auto"></a-sound>
+            <a-sound id="doorSound" src="assets/sounds/door.mp3" preload="auto"></a-sound>
+            <img src="assets/sky2.jpg" id="sky">
+            <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
+            <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
+                crossorigin>
+            <img id="cubes" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg" crossorigin>
+            <img id="cubes-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-cubes.jpg"
+                crossorigin>
+            <img id="sechelt" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg" crossorigin>
+            <img id="sechelt-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-sechelt.jpg"
+                crossorigin>
+            <a-asset-item id="mi-animacion" src="assets/animacion_corte.glb"></a-asset-item>
+            <img id="textura-madera" src="assets/madera.jpg">
+        </a-assets>
+
+        <a-sky id="image-360" src="#city"
+            animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
+            animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
+
+        <!-- Camara //limit-my-distance="priority:1" -->
+        <a-entity id="rig" movement-controls position="0 2 0" play-on-wasd>
+            <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10" look-controls
+                raycaster="objects: .colisionable">
+                <a-cursor id="cursor"
+                    animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
+                    animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+                    animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
+                </a-cursor>
+                <!--Pasos-->
+                <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
+                    volume="0.3"></a-sound>
+                <!-- Mano izquierda -->
+                <a-entity id="mano-izquierda" position="-0.5 -0.3 -1.0"
+                    super-hands="colliderEvent: collided; colliderEventProperty: els"></a-entity>
+                <!-- Mano derecha -->
+                <a-entity id="mano-derecha" position="0.5 -0.3 -1.0"
+                    super-hands="colliderEvent: collided; colliderEventProperty: els"></a-entity>
+            </a-camera>
+        </a-entity>
+
+        <!-- Suelo y techo -->
+        <a-entity geometry="primitive: plane; width: 30; height: 30"
+            material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 -1 0"
+            rotation="-90 0 0" depth="0.2" static-body></a-entity>
+        <a-entity geometry="primitive: plane; width: 30; height: 30"
+            material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 9 0"
+            rotation="90 0 0" depth="0.2" static-body></a-entity>
+
+
+        <!-- En inicio.html -->
+        <div id="ingredientes-container"></div>
+
+        <!-- Objectes -->
+        <a-entity obj-model="obj: url(assets/plat.obj); mtl: url(assets/plat.mtl);" position="3 1.35 -3.3"
+            scale="0.01 0.01 0.01" class="interactable" grab-and-move></a-entity>
+        <a-entity id="boton" geometry="primitive: box; width: 1; height: 0.2; depth: 1;" material="color: blue;"
+            position="0 0.5 -3"></a-entity>
+        <a-entity id="esfera" geometry="primitive: sphere; radius: 0.5;" material="color: red;" position="0 1 -3"
+            visible="false"></a-entity>
+        <a-entity class="animacionCorte" gltf-model="#mi-animacion" position="0 1 -3" scale="0.5 0.5 0.5"
+            animation-mixer rotation="0 90 0" visible="false"></a-entity>
+
+        <!-- Paredes -->
+        <a-box position="0 4 -15" width="30" height="10" depth="1" color="gray" static-body></a-box>
+        <!-- Pared detras -->
+        <a-box class="colisionable" position="0 4 15" width="30" height="10" depth="1" color="gray" static-body></a-box>
+        <!-- Pared delante -->
+        <a-box position="-15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
+            static-body></a-box> <!-- Pared izq ventana-->
+        <a-box position="-15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared izq -->
+        <a-box position="-15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box>
+        <!-- Pared izq -->
+        <a-box position="15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
+            static-body></a-box> <!-- Pared der -->
+        <a-box position="15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared der -->
+        <a-box position="15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared der -->
+
+        <!-- Encimera -->
+        <a-box src="#textura-madera" position="0 0 -3" depth="1.5" height="1" width="8"
+            sound="src:#sound; on:click; poolSize: 4" collision></a-box>
+        <!-- Lateral izquierdo -->
+        <a-box position="-4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c"></a-box>
+        <!-- Lateral derecho -->
+        <a-box position="4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c"></a-box>
+        <!-- Trasera -->
+        <a-box position="0 0 -3.85" width="8.4" height="8" depth="0.2" color="#d2b48c"></a-box>
+
+        <!-- Armario -->
+        <a-entity id="mueblePuerta" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta>
+            <!-- Partes de la nevera -->
+            <a-box id="arriba" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 1 0.5"
+                rotation="0 0 0"></a-box>
+            <a-box id="detras" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 0"
+                rotation="90 0 0"></a-box>
+            <a-box id="bajo" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 -1 0.5"
+                rotation="0 0 0"></a-box>
+            <a-box class="puerta" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 1"
+                rotation="90 0 0">
+                <!-- Pomo -->
+                <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="white" position="0.7 0.1 -0.3"
+                    rotation="90 0 0"></a-box>
+            </a-box>
+            <a-box id="der" width="1" height="2" depth="0.1" color="white" position="1 0 0.5" rotation="0 90 0"></a-box>
+            <a-box id="izq" width="1" height="2" depth="0.1" color="white" position="-1 0 0.5"
+                rotation="0 -90 0"></a-box>
+        </a-entity>
+
+        <!-- Nevera -->
+        <a-entity id="mueblePuerta" position="-5.2 0 -3" scale="0.7 0.7 0.7" puerta>
+            <!-- Partes de la nevera -->
+            <a-box id="arriba" width="2" height="0.1" depth="2" color="#FFF" position="0 1 0" rotation="0 0 0"></a-box>
+            <a-box id="detras" width="2" height="0.1" depth="2" color="#FFF" position="0 0 -1"
+                rotation="90 0 0"></a-box>
+            <a-box id="bajo" width="2" height="0.1" depth="2" color="#FFF" position="0 -1 0" rotation="0 0 0"></a-box>
+            <a-box class="puerta" width="2" height="0.1" depth="2" color="#FFF" position="0 0 1" rotation="90 0 0">
+                <!-- Pomo -->
+                <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="black" position="0.7 0.2 -0.3"
+                    rotation="90 0 0"></a-box>
+            </a-box>
+            <a-box id="der" width="2" height="2" depth="0.1" color="#FFF" position="1 0 0" rotation="0 90 0"></a-box>
+            <a-box id="izq" width="2" height="2" depth="0.1" color="#FFF" position="-1 0 0" rotation="0 -90 0"></a-box>
+        </a-entity>
+
+        <!-- Cambio de fondo -->
+
+        <a-entity position="-14.4 1 9" rotation="0 90 0">
+            <a-entity text="value: Cambiar el fondo; color: white; align: center; width: 8;"
+                position="0 2 0"></a-entity>
+            <!-- Enlace 1 -->
+            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #city"
+                sound="src:#sound; on:click; poolSize: 4" event-set__mouseenter="scale: 1.2 1.2 1"
+                event-set__mouseleave="scale: 1 1 1"
+                event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="-2 0 0">
+            </a-entity>
+
+            <!-- Enlace 2 -->
+            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
+                material="shader: flat; src: #sechelt" event-set__mouseenter="scale: 1.2 1.2 1"
+                event-set__mouseleave="scale: 1 1 1"
+                event-set__click="_target: #image-360; _delay: 300; material.src: #sechelt" position="-0.5 0 0"
+                sound="src:#house; on:click; poolSize: 4">
+            </a-entity>
+
+            <!-- Enlace 3 -->
+            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #cubes"
+                event-set__mouseenter="scale: 1.2 1.2 1" event-set__mouseleave="scale: 1 1 1"
+                event-set__click="_target: #image-360; _delay: 300; material.src: #cubes" position="1 0 0">
+            </a-entity>
+
+            <!-- Enlace 4 -->
+            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #city"
+                sound="on: click; src: #sound" event-set__mouseenter="scale: 1.2 1.2 1"
+                event-set__mouseleave="scale: 1 1 1"
+                event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="2.5 0 0">
+            </a-entity>
+        </a-entity>
+
+    </a-scene>
+</body>
+
+</html>

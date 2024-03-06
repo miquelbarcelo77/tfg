@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Joc de Cuina | Miquel</title>
+    <script src="js/aframe.min.js"></script>
+    <!--template Component to Create the Links
+    <script src="https://unpkg.com/aframe-template-component@3.x.x/dist/aframe-template-component.min.js"></script>
+    layout Component to Lay Out Links
+    <script src="https://unpkg.com/aframe-layout-component@4.x.x/dist/aframe-layout-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
+    Visual feedback on hover-->
+    <script src="js/aframe-extras.min.js"></script>
+    <script src="js/aframe-physics-system.min.js"></script>
+    <script src="js/menu.js"></script>
+    <script src="js/aframe-keyboard.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+</head>
+
+<body>
+    <a-scene keyboard-shortcuts="enterVR: false">
+        <a-assets>
+            <audio id="audioElement" autoplay loop controls>
+                <source src="assets/sounds/intro.mp3" type="audio/mp3">
+                Tu navegador no soporta el elemento de audio.
+            </audio>
+            <img src="assets/sky2.jpg" id="sky">
+            <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
+            <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
+                crossorigin>
+            <img id="cubes" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg" crossorigin>
+            <img id="cubes-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-cubes.jpg"
+                crossorigin>
+            <img id="sechelt" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg" crossorigin>
+            <img id="sechelt-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-sechelt.jpg"
+                crossorigin>
+
+
+        </a-assets>
+
+        <a-sky color="#87CEEB"></a-sky>
+
+        <!-- Cámara -->
+        <a-camera id="camera" look-controls wasd-controls="enabled: false" position="0 1.6 2">
+            <a-cursor id="cursor"
+                animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
+                animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+                animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
+            </a-cursor>
+        </a-camera>
+
+        <a-entity id="loginMenu" position="0 1.5 0">
+            <a-plane id="loginPanel" color="#000" height="2.5" width="2.2">
+                <a-text id="" value="BIENVENIDO" align="center" position="0 0.8 0.1" width="6"></a-text>
+                <a-text id="inputField" value="Escribe tu usuario" align="center" position="0 0.5 0.1"
+                    width="4"></a-text>
+                <a-entity id="keyboard" a-keyboard position="-1 0.3 0.1" scale="4 4 4"></a-entity>
+            </a-plane>
+        </a-entity>
+        <a-entity id="menuOpciones" position="-2 0.5 0.8" rotation="0 70 0">
+            <a-plane id="menuOpcionesButton" position="0 0 0" material="color: #0C9" width="2" height="0.5">
+                <a-text value="Opciones" align="center"></a-text>
+            </a-plane>
+        </a-entity>
+
+        <!-- Menú de volumen, inicialmente no visible -->
+        <a-entity id="menuVolumen" position="-2 1.5 0.8" rotation="0 70 0" visible="false">
+            <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
+                <a-text value="Volumen" align="center"></a-text>
+            </a-plane>
+            <a-plane id="retrocesoButton" position="0 -0.5 0" material="color: #0C9" width="2" height="0.3">
+                <a-text value="Volver" align="center"></a-text>
+            </a-plane>
+            <!-- Botones para ajustar el volumen -->
+            <a-plane id="botonSubirVolumen" position="0.5 0 0" material="color: #0C9" width="0.75" height="0.2">
+                <a-text value="+" align="center"></a-text>
+            </a-plane>
+            <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75" height="0.2">
+                <a-text value="-" align="center"></a-text>
+            </a-plane>
+        </a-entity>
+
+        <a-entity id="selectPartidaMenu" position="0.5 1.5 -1" visible="false">
+            <a-plane id="nuevaPartidaButton" position="0 0.2 0" material="color: #0C9" width="2" height="0.5"
+                onclick="nuevaPartida()">
+                <a-text value="Nueva Partida" align="center"></a-text>
+            </a-plane>
+            <a-plane id="seleccionarPartidaButton" position="0 -0.5 0" material="color: #F00" width="2" height="0.5"
+                onclick="seleccionarPartida()">
+                <a-text value="Seleccionar Partida" align="center"></a-text>
+            </a-plane>
+            <!-- Aquí podrías añadir más planes para cada partida existente -->
+        </a-entity>
+
+        <!-- Menú de inicio -->
+        <a-entity id="menuInicio" position="0 1.5 -2" visible="false">
+            <a-plane color="gray" width="6" height="6" opacity="0.8" rotation="0 0 0"></a-plane>
+            <a-text value="Menu de Inicio" color="white" align="center" position="0 1.5 0.05" scale="2 2 2"></a-text>
+            <a-entity position="0 0.8 0">
+                <a-box id="botonTumbet" onclick="iniciarPartida('tumbet')" color="blue" width="2" height="1" depth="0.1"
+                    position="0 -0.3 0.05">
+                    <a-text value="Tumbet" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
+                </a-box>
+                <a-box id="botonTortilla" color="blue" width="2" height="1" depth="0.1" position="0 -1.5 0.05">
+                    <a-text value="Tortilla" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
+                </a-box>
+                <a-box id="botonPaAmbOli" color="blue" width="2" height="1" depth="0.1" position="0 -2.7 0.05">
+                    <a-text value="Pa amb oli" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
+                </a-box>
+            </a-entity>
+        </a-entity>
+
+        <!-- Menú de opciones -->
+
+    </a-scene>
+</body>
+
+</html>
