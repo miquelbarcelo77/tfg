@@ -4,14 +4,7 @@
 <head>
     <title>Joc de Cuina | Miquel</title>
     <script src="js/aframe.min.js"></script>
-    <!--template Component to Create the Links
-    <script src="https://unpkg.com/aframe-template-component@3.x.x/dist/aframe-template-component.min.js"></script>
-    layout Component to Lay Out Links
-    <script src="https://unpkg.com/aframe-layout-component@4.x.x/dist/aframe-layout-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-event-set-component@5.x.x/dist/aframe-event-set-component.min.js"></script>
-    Visual feedback on hover-->
     <script src="js/aframe-extras.min.js"></script>
-    <script src="js/aframe-physics-system.min.js"></script>
     <script src="js/menu.js"></script>
     <script src="js/aframe-keyboard.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -21,10 +14,9 @@
 <body>
     <a-scene keyboard-shortcuts="enterVR: false">
         <a-assets>
-            <audio id="audioElement" autoplay loop controls>
-                <source src="assets/sounds/intro.mp3" type="audio/mp3">
-                Tu navegador no soporta el elemento de audio.
-            </audio>
+            <a-entity id="audioEntity">
+                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1"></a-sound>
+            </a-entity>
             <img src="assets/sky2.jpg" id="sky">
             <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
             <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
@@ -42,7 +34,7 @@
         <a-sky color="#87CEEB"></a-sky>
 
         <!-- Cámara -->
-        <a-camera id="camera" look-controls wasd-controls="enabled: false" position="0 1.6 2">
+        <a-camera id="camera" look-controls wasd-controls="enabled: true" position="0 1.6 2">
             <a-cursor id="cursor"
                 animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
                 animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
@@ -51,7 +43,7 @@
         </a-camera>
 
         <a-entity id="loginMenu" position="0 1.5 0">
-            <a-plane id="loginPanel" color="#000" height="2.5" width="2.2">
+            <a-plane id="loginPanel" color="#000" height="2.5" width="2.5">
                 <a-text id="" value="BIENVENIDO" align="center" position="0 0.8 0.1" width="6"></a-text>
                 <a-text id="inputField" value="Escribe tu usuario" align="center" position="0 0.5 0.1"
                     width="4"></a-text>
