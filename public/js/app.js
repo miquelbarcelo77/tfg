@@ -1,8 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const menuOpcionesButton = document.querySelector('#menuOpcionesButton');
   const fireSource = document.getElementById('fireSource');
   let fireCreated = false; // Indicador de si el anillo de fuego está activo
   let fireBoxes = []; // Almacenar las cajas de fuego para poder eliminarlas
 
+  //OPTIONS
+  menuOpcionesButton.addEventListener('click', () => {
+    menuVolumen.setAttribute('visible', true);
+  });
+
+  retrocesoButton.addEventListener('click', () => {
+    menuVolumen.setAttribute('visible', false);
+  });
+
+  function ajustarVolumen(cambio) {
+    const audioEntity = document.querySelector('#audioEntity a-sound');
+    let nuevoVolumen = parseFloat(audioEntity.getAttribute('volume')) + cambio;
+    nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen)); // Asegurar que el volumen esté entre 0 y 1
+    audioEntity.setAttribute('volume', nuevoVolumen);
+    console.log(`Volumen ajustado a ${nuevoVolumen}`);
+  }
+
+  botonSubirVolumen.addEventListener('click', () => ajustarVolumen(0.1));
+  botonBajarVolumen.addEventListener('click', () => ajustarVolumen(-0.1));
+
+  //FOGONES
   fireSource.addEventListener('click', () => {
     if (!fireCreated) {
       fireBoxes = createFireRing(); // Actualiza la lista de cajas con las nuevas creadas
@@ -17,36 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Espera a que se cargue la escena
-  document.querySelector('a-scene').addEventListener('loaded', function () {
-    /*// Obtiene referencia al botón
-    var boton = document.querySelector('#boton');
-
-    // Cuando se haga clic en el botón
-    boton.addEventListener('click', function () {
-      // Oculta el botón
-      boton.setAttribute('visible', 'false');
-
-      // Muestra el modelo con la animación
-      var modelo = document.querySelector('.animacionCorte');
-      modelo.setAttribute('visible', 'true');
-
-      // Inicia la animación del modelo
-      modelo.emit('play');
-
-      // Espera 5.7 segundos
-      setTimeout(function () {
-        // Oculta el modelo
-        modelo.setAttribute('visible', 'false');
-
-        // Muestra la esfera
-        var esfera = document.querySelector('#esfera');
-        esfera.setAttribute('visible', 'true');
-      }, 6000); // 5100 milisegundos = 5.1 segundos
-    });
-  });*/
-  });
-
+  //FOGONES
   function createFireRing() {
     const numberOfBoxes = 12; // Número de cajas
     const radius = 0.2; // Radio del círculo
@@ -79,35 +72,221 @@ document.addEventListener('DOMContentLoaded', () => {
     return localFireBoxes; // Devolver el arreglo local para ser usado fuera
   }
 
+  //Cargar los glb con static body
+  document.querySelector('#woodenTable').addEventListener('model-loaded', () => {
+    document.querySelector('#woodenTable').setAttribute('static-body', '');
+  });
 
-  // Arreglo de ingredientes predefinidos con sus nombres y modelos correspondientes
+  document.querySelector('#shaker').addEventListener('model-loaded', () => {
+    document.querySelector('#shaker').setAttribute('static-body', '');
+  });
+
+  document.querySelector('#fireSource').addEventListener('model-loaded', () => {
+    document.querySelector('#fireSource').setAttribute('static-body', '');
+  });
+
   const ingredientes = [
-    { nombre: 'tomate', modelo: './assets/Tomato.glb' },
-    { nombre: 'calabazin', modelo: './assets/Tomato.glb' },
+    { nombre: 'tomate', modelo: './assets/tomato.glb', scale: '1.5 1.5 1.5' },
+    { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5' },
     // Otros ingredientes...
   ];
 
-  // Hacer una solicitud al servidor para obtener los ingredientes
-  fetch('/ingredientes')
-    .then(response => response.json())
-    .then(data => {
-      // Iterar sobre los ingredientes obtenidos de la base de datos
-      data.forEach((ingrediente, index) => {
-        const position = `0 0 ${index * 2 + 2}`; // Calcular la posición en base al índice
+  function agregarIngredientes() {
+    fetch('/ingredientes')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        // Iterar sobre los ingredientes obtenidos de la base de datos
+        data.forEach((ingrediente, index) => {
+          const positionX = 6 + index + 0.2; // Ajustar para la posición X
+          const position = `${positionX} 1 -3`; // Calcular la posición del ingrediente
+          const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
+          const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/tomato.glb';
+          const escala = ingredienteEncontrado ? ingredienteEncontrado.scale : '0.1 0.1 0.1';
 
-        // Buscar el modelo correspondiente en el arreglo de ingredientes predefinidos
-        const modelo = ingredientes.find(i => i.nombre === ingrediente.nombre)?.modelo || './assets/Tomato.glb';
+          // Crear la entidad <a-entity> para el ingrediente
+          const entity = document.createElement('a-entity');
+          entity.setAttribute('position', position);
+          entity.setAttribute('gltf-model', modelo);
+          entity.setAttribute('scale', escala);
+          entity.setAttribute('mixin', 'grab');
+          entity.setAttribute('class', 'grab ingrediente');
+          entity.setAttribute('data-vida', ingrediente.PuntsVida); // Añade puntos de vida como atributo
+          entity.setAttribute('reset', `resetPosition: ${position}`);
+          entity.setAttribute('colocado-en-tabla', '');
 
-        // Crear la entidad <a-entity> para el ingrediente
-        const entity = document.createElement('a-entity');
-        entity.setAttribute('position', position);
-        entity.setAttribute('gltf-model', modelo);
 
-        // Agregar la entidad al escenario
-        document.querySelector('a-scene').appendChild(entity);
+          // Crear la entidad de la barra de progreso
+          const progressBar= document.createElement('a-box');
+          const progressBarPosition = `${positionX} ${parseFloat(position.split(' ')[1])} -3`; // Posición Y ligeramente arriba del ingrediente
+          progressBar.setAttribute('position', progressBarPosition);
+          const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
+          const anchoBarra = vidaInicial / 5; // Calcula el ancho basado en los puntos de vida
+          progressBar.setAttribute('width', anchoBarra.toString());
+          progressBar.setAttribute('height', '0.02');
+          progressBar.setAttribute('depth', '0.05');
+          progressBar.setAttribute('color', 'green'); // Color verde para representar la salud
+
+          progressBar.classList.add('barra-vida');
+          progressBar.setAttribute('data-nomInteractuable', ingrediente.NomInteractuable);
+
+          entity.barraProgreso = progressBar; // Guardar referencia a la barra de progreso en el ingrediente
+          entity.setAttribute('actualizar-barra-progreso', '');
+
+          // Agregar la entidad de la barra de progreso al escenario
+          document.querySelector('a-scene').appendChild(entity);
+          document.querySelector('a-scene').appendChild(progressBar);
+        });
+      })
+      .catch(error => console.error('Error al obtener ingredientes:', error));
+  }
+
+  AFRAME.registerComponent('actualizar-barra-progreso', {
+    tick: function () {
+      // Suponiendo que `this.el` es el ingrediente y tiene una barra de progreso asociada
+      let barraProgreso = this.el.barraProgreso; // Supongamos que guardaste la referencia aquí
+      if (!barraProgreso) return;
+
+      // Obtener la posición del ingrediente
+      let posicionIngrediente = this.el.getAttribute('position');
+
+      // Calcular la nueva posición de la barra de progreso
+      let nuevaPosicionBarra = {
+        x: posicionIngrediente.x,
+        y: posicionIngrediente.y + 0.5, // Ajusta este valor según sea necesario
+        z: posicionIngrediente.z
+      };
+
+      // Actualizar la posición de la barra de progreso
+      barraProgreso.setAttribute('position', nuevaPosicionBarra);
+    }
+  });
+
+  AFRAME.registerComponent('detectar-golpe', {
+    init: function () {
+      this.el.addEventListener('collide', (e) => {
+        let vidaActual;
+        let progressBar;
+        const ingredienteGolpeado = e.detail.body.el;
+        if (ingredienteGolpeado.classList.contains('ingrediente')) {
+          // Supongamos que cada ingrediente tiene un atributo 'data-vida'
+          const listoParaCortar = ingredienteGolpeado.getAttribute('data-listo-para-cortar') === 'true';
+          if (listoParaCortar) {
+            vidaActual = parseInt(ingredienteGolpeado.getAttribute('data-vida'));
+            vidaActual = Math.max(0, vidaActual - 2); // Asegúrate de no tener valores negativos
+            ingredienteGolpeado.setAttribute('data-vida', vidaActual.toString());
+
+            // Actualiza la barra de progreso, si es necesario
+            // Supongamos que cada ingrediente tiene una referencia a su barra de progreso
+            progressBar = ingredienteGolpeado.barraProgreso; // Asegúrate de haber establecido esta referencia
+            if (progressBar) {
+              const vidaMaxima = 20; // O el valor que corresponda
+              const anchoBarra = 0.2 * (vidaActual / vidaMaxima); // Ajusta '0.2' según el ancho máximo de tu barra
+              progressBar.setAttribute('width', anchoBarra.toString());
+            }
+          }
+          if (vidaActual <= 12 && vidaActual > 5) {
+            console.log("vida 12");
+            progressBar.setAttribute('color', '#E58C1A');
+            // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
+          }
+          // Aquí podrías también manejar la lógica para cuando la vida llega a 0
+          if (vidaActual <= 5 && vidaActual > 0) {
+            console.log("vida 5");
+            progressBar.setAttribute('color', '#FF0000');
+            // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
+          }
+          //Cambiar de ingrediente
+          if (vidaActual <= 0) {
+            console.log("vida 0");
+            progressBar.setAttribute('hidden',true);
+            // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
+          }
+        }
       });
-    })
-    .catch(error => console.error('Error al obtener ingredientes:', error));
+    }
+  });
+
+  // Esperar a que la mesa se haya cargado para añadir los ingredientes
+  document.querySelector('#woodenTable').addEventListener('model-loaded', agregarIngredientes);
+
+  // Hacer una solicitud al servidor para obtener los ingredientes
+  document.querySelector('#woodenTable').addEventListener('model-loaded', agregarIngredientes);
+
+  //RESET AL CAER
+  AFRAME.registerComponent('reset', {
+    schema: {
+      resetPosition: { type: 'vec3' }, // Posición a la que se reseteará el objeto
+    },
+    init: function () {
+      // Se ejecuta una vez cuando el componente se añade por primera vez
+      this.el.addEventListener('collide', this.handleCollision.bind(this));
+    },
+    handleCollision: function (e) {
+      // Comprobar si el objeto con el que se ha colisionado es el suelo
+      if (e.detail.body.el.id === 'floor') { // Asumiendo que el ID del suelo es 'floor'
+        // Resetear la posición del objeto
+        this.el.object3D.position.set(
+          this.data.resetPosition.x,
+          this.data.resetPosition.y,
+          this.data.resetPosition.z
+        );
+        // Si estás usando un sistema de físicas, es posible que necesites actualizar el cuerpo de físicas también
+        if (this.el.body) {
+          this.el.body.position.set(
+            this.data.resetPosition.x,
+            this.data.resetPosition.y,
+            this.data.resetPosition.z
+          );
+          // Reinicia la velocidad para evitar movimientos extraños tras el reset
+          this.el.body.velocity.set(0, 0, 0);
+          this.el.body.angularVelocity.set(0, 0, 0);
+        }
+      }
+      if (e.detail.body.el.id === 'roof') { // Asumiendo que el ID del suelo es 'floor'
+        // Resetear la posición del objeto
+        this.el.object3D.position.set(
+          this.data.resetPosition.x,
+          this.data.resetPosition.y,
+          this.data.resetPosition.z
+        );
+        // Si estás usando un sistema de físicas, es posible que necesites actualizar el cuerpo de físicas también
+        if (this.el.body) {
+          this.el.body.position.set(
+            this.data.resetPosition.x,
+            this.data.resetPosition.y,
+            this.data.resetPosition.z
+          );
+          // Reinicia la velocidad para evitar movimientos extraños tras el reset
+          this.el.body.velocity.set(0, 0, 0);
+          this.el.body.angularVelocity.set(0, 0, 0);
+        }
+      }
+    },
+    remove: function () {
+      // Limpiar event listeners si el componente se elimina
+      this.el.removeEventListener('collide', this.handleCollision);
+    }
+  });
+
+  //COMPONENTE DE CORTE
+  AFRAME.registerComponent('colocado-en-tabla', {
+    init: function () {
+      this.el.addEventListener('collide', (e) => {
+        if (e.detail.body.el.id === 'tabla') {
+          // Ajustar la posición del ingrediente al centro de la tabla
+          let tablaPos = document.querySelector('#tabla').getAttribute('position');
+          this.el.setAttribute('position', { x: tablaPos.x, y: tablaPos.y + 0.25, z: tablaPos.z });
+          // Cambiar a static-body para hacerlo inmóvil
+          this.el.setAttribute('dynamic-body', 'mass', 0);
+          this.el.removeAttribute('dynamic-body');
+          this.el.setAttribute('static-body', '');
+          this.el.setAttribute('data-listo-para-cortar', 'true');
+        }
+      });
+    }
+  });
+
 
   //Vibrate on click
   AFRAME.registerComponent('vibrate-on-click', {

@@ -17,12 +17,21 @@
 </head>
 
 <body>
-    <a-scene physics>
+    <a-scene physics="debug: true;">
         <a-assets>
-            <a-mixin id="cube" geometry="primitive: box; width: 0.33; height: 0.33; depth: 0.33" hoverable grabbable
+            <a-mixin id="grab" geometry="primitive: box; width: 0.1; height: 0.1; depth: 0.1" hoverable grabbable
                 stretchable draggable event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
                 event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false" dynamic-body
                 shadow></a-mixin>
+
+            <!-- <a-mixin id="grab" geometry="primitive: box; width: 0.5; height: 0.5; depth: 0.5" hoverable grabbable
+                stretchable draggable droppable shadow
+                event-set__dragdrop="_event: drag-drop; geometry.primitive: sphere; geometry.radius: 0.25"
+                event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
+                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"
+                event-set__dragon="_event: dragover-start; material.wireframe: true"
+                event-set__dragoff="_event: dragover-end; material.wireframe: false">
+            </a-mixin> -->
 
             <a-mixin id="all-interactions" hoverable grabbable stretchable draggable
                 event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
@@ -47,6 +56,9 @@
                               colliderEndEventProperty: clearedEls;">
             </a-mixin>
 
+            <!-- <a-entity id="audioEntity">
+                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1"></a-sound>
+            </a-entity> -->
             <a-sound id="sound" src="assets/sounds/fallo.mp3" preload="auto"></a-sound>
             <a-sound id="house" src="assets/sounds/house_lo.mp3" preload="auto"></a-sound>
             <a-sound id="doorSound" src="assets/sounds/door.mp3" preload="auto"></a-sound>
@@ -68,32 +80,32 @@
             animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
             animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
 
-        <!-- Camara //limit-my-distance="priority:1" -->
         <!-- <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10" look-controls
-                raycaster="objects: .colisionable"></a-camera>
-            <!-- <a-cursor id="cursor"
-                    animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
-                    animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
-                    animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
-                </a-cursor> -->
-        <!--Pasos 
+                raycaster="objects: .colisionable">
+                <a-cursor id="cursor"
+                animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
+                animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+                animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
+            </a-cursor> </a-camera>
+            
             <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
-                volume="0.3"></a-sound>
+                volume="0.3"></a-sound> 
         </a-entity> -->
 
-        <a-entity id="rig" movement-controls position="0 1 0">
+        <a-entity id="rig" movement-controls position="0 1.5 0">
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10"></a-camera>
-            <!-- <a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .cube"
+            <a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
                 cursor="rayOrigin:mouse" static-body="shape: sphere; sphereRadius: 0.001" super-hands="colliderEvent: raycaster-intersection;
                              colliderEventProperty: els;
                              colliderEndEvent:raycaster-intersection-cleared;
                              colliderEndEventProperty: clearedEls;">
-            </a-entity> -->
-            <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
+
+            </a-entity>
+            <!-- <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
             </a-entity>
             <a-entity id="lhand" mixin="physics-hands" hand-controls="hand: left">
-            </a-entity>
+            </a-entity> -->
 
             <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
                 volume="0.3"></a-sound>
@@ -113,39 +125,46 @@
                 }
             })
         </script>
-        <!-- hover & drag-drop won't have any obvious effect without some additional event handlers or components. See the examples page for more -->
-        <!-- <a-box hoverable grabbable stretchable draggable droppable color="blue" position="0 0 -1"></a-box> -->
-        <a-entity class="cube" mixin="cube" position="0 2 -3" material="color: red"></a-entity>
 
+        <!-- LUCES -->
         <a-light type="ambient" color="#ffffff"></a-light>
         <a-light type="directional" color="#ffffff" intensity="0.4" position="0 4 -3"></a-light>
+
         <!-- Suelo y techo a-->
-        <a-entity geometry="primitive: plane; width: 30; height: 30"
+        <a-entity id="floor" geometry="primitive: plane; width: 30; height: 30"
             material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 -0.5 0"
             rotation="-90 0 0" depth="0.2" static-body></a-entity>
-        <a-entity geometry="primitive: plane; width: 30; height: 30"
+        <a-entity id="roof" geometry="primitive: plane; width: 30; height: 30"
             material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 9 0"
             rotation="90 0 0" depth="0.2" static-body></a-entity>
 
-        <!-- En inicio.html -->
-        <div id="ingredientes-container"></div>
-
         <!-- Objectes -->
-        <!-- <a-entity id="boton" geometry="primitive: box; width: 1; height: 0.2; depth: 1;" material="color: blue;"
-            position="0 0.5 -3" hoverable grabbable stretchable draggable droppable></a-entity> -->
 
-        <a-entity gltf-model="url(assets/batidora.glb)" position="2 0.65 -3" rotation="0 -90 0" scale="0.2 0.2 0.2"
-            static-body vibrate-on-click progress-bar></a-entity>
+        <a-entity class="grab" mixin="grab" position="-1 1 -3" material="color: red" reset="resetPosition: -1 2 -3"
+            colocado-en-tabla></a-entity>
+
+        <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0" scale="0.2 0.2 0.2"
+            vibrate-on-click progress-bar></a-entity>
 
         <a-entity id="fireSource" gltf-model="url(assets/fogons.glb)" position="-2.2 0.55 -3" rotation="0 0 0"
             scale="0.065 0.065 0.065"></a-entity>
 
-        <a-entity gltf-model="url(assets/frying_pan.glb)" position="0 2 -3.6" rotation="-90 0 0" scale="0.02 0.02 0.02">
+        <a-entity id="woodenTable" gltf-model="url(assets/wooden_table.glb)" position="7 0 -3"
+            rotation="0 70 0"></a-entity>
+
+        <a-entity id="fryingPan" mixin="grab" class="grab" gltf-model="url(assets/frying_pan.glb)" position="-2 2 -3"
+            rotation="0 0 0" scale="0.02 0.02 0.02" reset="resetPosition: 0 2 -3">
         </a-entity>
-        <a-asset-item id="atap" src="assets/tap.glb"></a-asset-item>
-        <a-entity id="tap" class="interactable" grabbable dynamic-body="shape: box"
-            collision-filter="group: interactable; collidesWith: default,hands" gltf-model="#atap"
-            scale="0.01 0.01 0.01" position="-2.2 1 -3"></a-entity>
+
+        <a-entity id="kitchenKnife" mixin="grab" class="grab" gltf-model="url(assets/kitchen_knife.glb)" position="1 0.8 -3"
+            rotation="0 0 0" scale="1.5 1.5 1.5" reset="resetPosition: 0 1.2 -3" detectar-golpe>
+        </a-entity>
+
+        <a-plane id="tabla" position="1 0.52 -3" rotation="-90 0 0" width="1.5" height="0.5" color="#562701"
+            src="assets/madera.jpg" static-body></a-plane>
+
+        <a-entity text="value: Coge los ingredientes; color: white; align: center; width: 6;" position="7 3 -3"
+            rotation="0 -20 0"></a-entity>
 
         <!-- Paredes -->
         <a-box position="0 4 -15" width="30" height="10" depth="1" color="gray" static-body></a-box>
@@ -211,7 +230,6 @@
         </a-entity>
 
         <!-- Cambio de fondo -->
-
         <a-entity position="-14.4 1 9" rotation="0 90 0">
             <a-entity text="value: Cambiar el fondo; color: white; align: center; width: 8;"
                 position="0 2 0"></a-entity>
@@ -241,6 +259,29 @@
                 sound="on: click; src: #sound" event-set__mouseenter="scale: 1.2 1.2 1"
                 event-set__mouseleave="scale: 1 1 1"
                 event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="2.5 0 0">
+            </a-entity>
+
+            <a-entity id="menuOpciones" position="-4 0.5 0" rotation="0 0 0">
+                <a-plane id="menuOpcionesButton" position="0 0 0" material="color: #0C9" width="2" height="0.5">
+                    <a-text value="Opciones" align="center"></a-text>
+                </a-plane>
+            </a-entity>
+
+            <!-- Menú de volumen, inicialmente no visible -->
+            <a-entity id="menuVolumen" position="-2 1.5 0.8" rotation="0 0 0" visible="false">
+                <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
+                    <a-text value="Volumen" align="center"></a-text>
+                </a-plane>
+                <a-plane id="retrocesoButton" position="0 -0.5 0" material="color: #0C9" width="2" height="0.3">
+                    <a-text value="Volver" align="center"></a-text>
+                </a-plane>
+                <!-- Botones para ajustar el volumen -->
+                <a-plane id="botonSubirVolumen" position="0.5 0 0" material="color: #0C9" width="0.75" height="0.2">
+                    <a-text value="+" align="center"></a-text>
+                </a-plane>
+                <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75" height="0.2">
+                    <a-text value="-" align="center"></a-text>
+                </a-plane>
             </a-entity>
         </a-entity>
     </a-scene>

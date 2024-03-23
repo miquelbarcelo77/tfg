@@ -10,11 +10,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Espera a que se cargue la escena
     document.querySelector('a-scene').addEventListener('loaded', function () {
-        // Obtiene referencia al botón de inicio
-        var botonInicio = document.querySelector('#botonInicio');
-        // Obtiene referencia al botón de opciones
-        var botonOpciones = document.querySelector('#botonOpciones');
-        // Obtiene referencia al botón de Tumbet
         var botonTumbet = document.querySelector('#botonTumbet');
         // Obtiene referencia al botón de Tortilla
         var botonTortilla = document.querySelector('#botonTortilla');

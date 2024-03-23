@@ -34,7 +34,7 @@ app.post('/nuevaPartida', (req, res) => {
   console.log("Estado actual de req.session.usuario:", req.session.usuario);
   // Asumiendo que la sesión del usuario está correctamente configurada y disponible
   if (!req.session.usuario || !req.session.usuario.nombre) {
-      return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+    return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
   }
 
   const { nivel } = req.body; // Nivel viene del cuerpo de la solicitud
@@ -45,22 +45,22 @@ app.post('/nuevaPartida', (req, res) => {
   // Insertar la nueva partida en la base de datos usando el nombre de usuario de la sesión
   const query = 'INSERT INTO Partida (NomNiv, NomUs, Cookie) VALUES (?, ?, ?)';
   connection.query(query, [nivel, usuarioNombre, Cookie], (error, results) => {
-      if (error) {
-          console.error('Error al insertar la partida:', error);
-          return res.status(500).json({ success: false, message: 'Error al crear la partida' });
-      }
+    if (error) {
+      console.error('Error al insertar la partida:', error);
+      return res.status(500).json({ success: false, message: 'Error al crear la partida' });
+    }
 
-      // Establecer la cookie con el ID de la partida
-      res.cookie('Cookie', Cookie, { maxAge: 900000, httpOnly: true });
+    // Establecer la cookie con el ID de la partida
+    res.cookie('Cookie', Cookie, { maxAge: 900000, httpOnly: true });
 
-      res.json({ success: true, message: 'Creada correctamente'});
+    res.json({ success: true, message: 'Creada correctamente' });
   });
 });
 
 app.get('/obtenerPartidas', (req, res) => {
   // Verificar si el usuario está autenticado
   if (!req.session.usuario || !req.session.usuario.nombre) {
-      return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
+    return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
   }
 
   const usuarioNombre = req.session.usuario.nombre;
@@ -69,27 +69,40 @@ app.get('/obtenerPartidas', (req, res) => {
   const query = 'SELECT IdPartida, NomNiv FROM Partida WHERE NomUs = ?';
 
   connection.query(query, [usuarioNombre], (error, results) => {
-      if (error) {
-          console.error('Error al obtener las partidas:', error);
-          return res.status(500).json({ success: false, message: 'Error al obtener las partidas' });
-      }
+    if (error) {
+      console.error('Error al obtener las partidas:', error);
+      return res.status(500).json({ success: false, message: 'Error al obtener las partidas' });
+    }
 
-      // Devolver las partidas encontradas
-      res.json(results);
+    // Devolver las partidas encontradas
+    res.json(results);
   });
 });
 
-// Ruta GET para obtener los datos de la tabla "tipus"
+// Ruta GET para obtener los datos de los ingredientes
 app.get('/ingredientes', (req, res) => {
-  connection.query("SELECT NomInteractuable FROM Interactuable WHERE NomTipus='ingrediente'", (err, results) => {
+  const query = `
+    SELECT 
+      i.NomInteractuable, 
+      pv.PuntsVida 
+    FROM 
+      Interactuable i
+      INNER JOIN Tipus t ON i.NomTipus = t.NomTipus
+      INNER JOIN PuntsVida pv ON t.NomTipus = pv.NomTipus
+    WHERE 
+      i.NomTipus = 'ingrediente'
+  `;
+
+  connection.query(query, (err, results) => {
     if (err) {
       console.error('Error al ejecutar la consulta: ', err);
-      res.status(500).json({ error: 'Error al obtener los tipos' });
+      res.status(500).json({ error: 'Error al obtener los ingredientes y sus puntos de vida' });
       return;
     }
     res.json(results);
   });
 });
+
 
 app.post('/verificar-usuario', (req, res) => {
   const username = req.body.username;
@@ -111,7 +124,7 @@ app.post('/verificar-usuario', (req, res) => {
     if (count > 0) {
       // Si el nombre de usuario existe en la base de datos, iniciar sesión en lugar de crear un nuevo usuario
       req.session.usuario = { nombre: username };
-      res.status(200).json({ existe: true});
+      res.status(200).json({ existe: true });
     } else {
       // Si el nombre de usuario no existe en la base de datos, devolver que el usuario no existe
       res.status(200).json({ existe: false });
