@@ -62,6 +62,8 @@
             <a-sound id="sound" src="assets/sounds/fallo.mp3" preload="auto"></a-sound>
             <a-sound id="house" src="assets/sounds/house_lo.mp3" preload="auto"></a-sound>
             <a-sound id="doorSound" src="assets/sounds/door.mp3" preload="auto"></a-sound>
+            <img id="tick-verde" src="assets/images/tick-verde.png">
+            <img id="x-roja" src="assets/images/CheckmarkIcon.png">
             <img src="assets/sky2.jpg" id="sky">
             <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
             <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
@@ -80,20 +82,20 @@
             animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
             animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
 
-        <!-- <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
+        <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10" look-controls
                 raycaster="objects: .colisionable">
                 <a-cursor id="cursor"
-                animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
-                animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
-                animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
-            </a-cursor> </a-camera>
-            
-            <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
-                volume="0.3"></a-sound> 
-        </a-entity> -->
+                    animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
+                    animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
+                    animation__fusing="property: scale; from: 1 1 1; to: 0.1 0.1 0.1; easing: easeInCubic; dur: 150; startEvents: fusing">
+                </a-cursor> </a-camera>
 
-        <a-entity id="rig" movement-controls position="0 1.5 0">
+            <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
+                volume="0.3"></a-sound>
+        </a-entity>
+
+        <!-- <a-entity id="rig" movement-controls position="0 1.5 0">
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10"></a-camera>
             <a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
                 cursor="rayOrigin:mouse" static-body="shape: sphere; sphereRadius: 0.001" super-hands="colliderEvent: raycaster-intersection;
@@ -105,11 +107,11 @@
             <!-- <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
             </a-entity>
             <a-entity id="lhand" mixin="physics-hands" hand-controls="hand: left">
-            </a-entity> -->
+            </a-entity>
 
             <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
                 volume="0.3"></a-sound>
-        </a-entity>
+        </a-entity> -->
 
         <script>
             // turn controller's physics presence on only while button held down
@@ -143,8 +145,8 @@
         <a-entity class="grab" mixin="grab" position="-1 1 -3" material="color: red" reset="resetPosition: -1 2 -3"
             colocado-en-tabla></a-entity>
 
-        <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0" scale="0.2 0.2 0.2"
-            vibrate-on-click progress-bar></a-entity>
+        <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0"
+            scale="0.2 0.2 0.2" vibrate-on-click progress-bar></a-entity>
 
         <a-entity id="fireSource" gltf-model="url(assets/fogons.glb)" position="-2.2 0.55 -3" rotation="0 0 0"
             scale="0.065 0.065 0.065"></a-entity>
@@ -156,8 +158,8 @@
             rotation="0 0 0" scale="0.02 0.02 0.02" reset="resetPosition: 0 2 -3">
         </a-entity>
 
-        <a-entity id="kitchenKnife" mixin="grab" class="grab" gltf-model="url(assets/kitchen_knife.glb)" position="1 0.8 -3"
-            rotation="0 0 0" scale="1.5 1.5 1.5" reset="resetPosition: 0 1.2 -3" detectar-golpe>
+        <a-entity id="kitchenKnife" mixin="grab" class="grab" gltf-model="url(assets/kitchen_knife.glb)"
+            position="1 0.8 -3" rotation="0 0 0" scale="1.5 1.5 1.5" reset="resetPosition: 0 1.2 -3" detectar-golpe>
         </a-entity>
 
         <a-plane id="tabla" position="1 0.52 -3" rotation="-90 0 0" width="1.5" height="0.5" color="#562701"
@@ -194,7 +196,7 @@
         <a-box position="1 3 -3.7" width="2.5" height="0.2" depth="0.1" color="grey" static-body></a-box>
 
         <!-- Armario -->
-        <a-entity id="mueblePuerta" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta>
+        <a-entity id="armario" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta>
             <!-- Partes de la nevera -->
             <a-box id="arriba" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 1 0.5"
                 rotation="0 0 0"></a-box>
@@ -213,8 +215,30 @@
                 rotation="0 -90 0"></a-box>
         </a-entity>
 
+        <!-- Horno -->
+        <a-entity id="horno" position="0 0.2 -1" scale="0.7 0.7 0.7" puerta-horno>
+            <a-entity progress-bar position="0 0 0" rotation="0 45 0"></a-entity>
+            <!-- Partes de la nevera -->
+            <a-box id="arribaHorno" width="2" height="0.1" depth="1" color="black" position="0 1 0.5"
+                rotation="0 0 0"></a-box>
+            <a-box id="detrasHorno" width="2" height="0.1" depth="2" color="black" position="0 0 0"
+                rotation="90 0 0"></a-box>
+            <a-box id="bajoHorno" width="2" height="0.1" depth="1" color="black" position="0 -1 0.5"
+                rotation="0 0 0"></a-box>
+            <a-box id="puertaHorno" class="puerta-horno" width="2" height="0.1" depth="2" color="grey"
+                transparent="true" position="0 0 1" opacity="0.5" rotation="90 0 0"
+                aabb-collider="objects: .collidable; interval: 1000">
+                <!-- Pomo -->
+
+            </a-box>
+            <a-box id="derHorno" width="1" height="2" depth="0.1" color="black" position="1 0 0.5"
+                rotation="0 90 0"></a-box>
+            <a-box id="izqHorno" width="1" height="2" depth="0.1" color="black" position="-1 0 0.5"
+                rotation="0 -90 0"></a-box>
+        </a-entity>
+
         <!-- Nevera -->
-        <a-entity id="mueblePuerta" position="-5.2 0 -3" scale="0.7 0.7 0.7" puerta>
+        <a-entity id="nevera" position="-5.2 0.2 -3" scale="0.7 0.7 0.7" puerta>
             <!-- Partes de la nevera -->
             <a-box id="arriba" width="2" height="0.1" depth="2" color="#FFF" position="0 1 0" rotation="0 0 0"></a-box>
             <a-box id="detras" width="2" height="0.1" depth="2" color="#FFF" position="0 0 -1"

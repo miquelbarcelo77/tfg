@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
           // Crear la entidad de la barra de progreso
-          const progressBar= document.createElement('a-box');
+          const progressBar = document.createElement('a-box');
           const progressBarPosition = `${positionX} ${parseFloat(position.split(' ')[1])} -3`; // Posición Y ligeramente arriba del ingrediente
           progressBar.setAttribute('position', progressBarPosition);
           const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
           //Cambiar de ingrediente
           if (vidaActual <= 0) {
             console.log("vida 0");
-            progressBar.setAttribute('hidden',true);
+            progressBar.setAttribute('hidden', true);
             // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
           }
         }
@@ -404,6 +404,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  AFRAME.registerComponent('puerta-horno', {
+    schema: {
+      cookingTime: { type: 'number', default: 8000 } // Tiempo de cocción en milisegundos
+    },
+    init: function () {
+      this.isCooking = false; // Estado inicial de cocción
+      this.isFirstClick = true;
+      this.rotated = false; // Estado inicial de la puerta
+      this.sound = document.querySelector('#doorSound'); // Sonido de la puerta
+      var puertaHorno = document.querySelector('.puerta-horno');
+
+      this.el.addEventListener('click', () => {
+        if (this.isFirstClick) {
+          puertaHorno.setAttribute('animation', 'property: rotation; to: 90 90 0; dur: 1000; easing: linear');
+          this.isFirstClick = false;
+          this.sound.components.sound.playSound();
+          return;
+        }
+
+        if (this.isCooking) {
+          console.log("La cocción está en curso. No se puede abrir la puerta.");
+          return; // No hacer nada si la cocción está en curso
+        }
+
+        if (!this.rotated) {
+          console.log("entra");
+          // Cierra la puerta y comienza la cocción
+          puertaHorno.setAttribute('animation', 'property: rotation; to: 90 0 0; dur: 1000; easing: linear');
+          this.rotated = true;
+          this.startCooking();
+        } else {
+          // Abre la puerta, si la cocción ha terminado
+          puertaHorno.setAttribute('animation', 'property: rotation; to: 0 0 0; dur: 1000; easing: linear');
+          this.rotated = false;
+        }
+
+        // Reproducir el sonido de la puerta
+        if (this.sound && this.sound.components.sound) {
+          this.sound.components.sound.playSound();
+        }
+      });
+    },
+    startCooking: function () {
+      this.isCooking = true;
+      console.log("Cocción iniciada");
+
+      // Configurar un temporizador para el tiempo de cocción
+      setTimeout(() => {
+        this.isCooking = false; // Actualizar el estado de cocción
+        console.log("Cocción finalizada");
+        // Opcional: Abrir la puerta automáticamente aquí si es necesario
+      }, this.data.cookingTime);
+    }
+  });
+
   AFRAME.registerComponent('foo', {
     init: function () {
       this.el.addEventListener('collide', function (e) {
@@ -474,4 +529,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
     }
   });
+
+  const queryParams = new URLSearchParams(window.location.search);
+
+  // Extrae el IdPartida de los parámetros
+  const idPartida = queryParams.get('partidaId');
+
+  // Ahora que tienes el IdPartida, puedes usarlo según necesites
+  console.log(idPartida); // Solo para demostración, reemplázalo por lo que necesites hacer
+
+  // Por ejemplo, cargar los objetivos para esta IdPartida
+  cargarObjetivosDePartida(idPartida);
+
+  function cargarObjetivosDePartida(idPartida) {
+    // Asumiendo que tienes una función para hacer esto, reemplaza este código según necesites
+    fetch(`/obtenerObjetivos/${idPartida}`)
+      .then(response => response.json())
+      .then(objetivos => {
+        console.log(objetivos); // Haz algo con los objetivos aquí
+        const sceneEl = document.querySelector('a-scene'); // Encuentra el elemento de la escena
+
+        objetivos.forEach((objetivo, index) => {
+          // Crea el plane para el objetivo
+          const objetivoEl = document.createElement('a-plane');
+          objetivoEl.setAttribute('position', { x: 8, y: 1.5 - index * 0.5, z: 1}); // Ajusta la posición según necesites
+          objetivoEl.setAttribute('rotation', '0 -90 0')
+          objetivoEl.setAttribute('width', '4');
+          objetivoEl.setAttribute('height', '0.4');
+          objetivoEl.setAttribute('color', '#FFF');
+
+          // Crea el texto para el objetivo
+          const textoEl = document.createElement('a-text');
+          textoEl.setAttribute('value', objetivo.NomObj);
+          textoEl.setAttribute('align', 'center');
+          textoEl.setAttribute('color', '#000');
+          textoEl.setAttribute('position', '-1 0 0.1'); // Ajusta según la necesidad
+
+          // Añade el texto al plane del objetivo
+          objetivoEl.appendChild(textoEl);
+
+          // Crea el icono de estado (tick verde o X roja)
+          const iconoEstadoEl = document.createElement('a-image');
+          iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
+          iconoEstadoEl.setAttribute('position', '1.8 0 0.1');
+          iconoEstadoEl.setAttribute('height', '0.3');
+          iconoEstadoEl.setAttribute('width', '0.3');
+
+          // Añade el icono al plane del objetivo
+          objetivoEl.appendChild(iconoEstadoEl);
+
+          // Añade el plane del objetivo a la escena
+          sceneEl.appendChild(objetivoEl);
+        });
+      })
+      .catch(error => console.error('Error al cargar objetivos:', error));
+  }
+
+  function completarObjetivo(idPartida, idObj) {
+    const url = '/api/completarObjetivo'; // URL de tu endpoint
+    const data = {
+      idPartida: idPartida,
+      idObj: idObj,
+      completado: true // Asumiendo que siempre completarás el objetivo con esta función
+    };
+  
+    fetch(url, {
+      method: 'POST', // o 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Objetivo completado:', data);
+      // Aquí puedes añadir cualquier lógica adicional que necesites ejecutar tras completar el objetivo.
+      // Por ejemplo, actualizar la interfaz de usuario para reflejar que el objetivo se ha completado.
+    })
+    .catch((error) => {
+      console.error('Error al completar el objetivo:', error);
+    });
+  }
+  
+
+
+
 });

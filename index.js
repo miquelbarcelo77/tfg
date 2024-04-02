@@ -103,6 +103,72 @@ app.get('/ingredientes', (req, res) => {
   });
 });
 
+// Endpoint para obtener los objetivos de una partida específica
+app.get('/obtenerObjetivos/:idPartida', (req, res) => {
+  const idPartida = req.params.idPartida;
+
+  // Primero, obtenemos el nivel asociado a la partida
+  const queryNivel = 'SELECT NomNiv FROM Partida WHERE IdPartida = ?';
+
+  connection.query(queryNivel, [idPartida], (error, resultsNivel) => {
+      if (error || resultsNivel.length === 0) {
+          console.error('Error al obtener el nivel de la partida:', error);
+          return res.status(500).json({ success: false, message: 'Error al obtener el nivel de la partida' });
+      }
+
+      const nomNiv = resultsNivel[0].NomNiv;
+
+      // Luego, obtenemos los objetivos para ese nivel, y su estado de completitud para la partida dada
+      const query = `
+          SELECT 
+              o.IdObj, 
+              o.NomObj, 
+              o.DescObj, 
+              o.Temps, 
+              IFNULL(po.Completado, FALSE) as Completado
+          FROM 
+              Objectiu o
+          LEFT JOIN 
+              Partida_Objectiu po ON o.IdObj = po.IdObj AND po.IdPartida = ?
+          WHERE 
+              o.NomNiv = ?
+      `;
+
+      connection.query(query, [idPartida, nomNiv], (error, results) => {
+          if (error) {
+              console.error('Error al obtener los objetivos del nivel para la partida:', error);
+              return res.status(500).json({ success: false, message: 'Error al obtener los objetivos del nivel' });
+          }
+
+          // Devolver los objetivos encontrados
+          res.json(results);
+      });
+  });
+});
+
+
+
+
+app.post('/api/completarObjetivo', (req, res) => {
+  const { idPartida, idObj, completado } = req.body;
+  
+  // Asumiendo que ya tienes establecida la conexión con la base de datos
+  const query = `
+      UPDATE Partida_Objectiu 
+      SET Completado = ? 
+      WHERE IdPartida = ? AND IdObj = ?`;
+
+  connection.query(query, [completado, idPartida, idObj], (error, results) => {
+      if (error) {
+          console.error('Error al actualizar el estado del objetivo:', error);
+          return res.status(500).json({ success: false, message: 'Error al completar el objetivo' });
+      }
+
+      res.json({ success: true, message: 'Objetivo actualizado correctamente' });
+  });
+});
+
+
 
 app.post('/verificar-usuario', (req, res) => {
   const username = req.body.username;
