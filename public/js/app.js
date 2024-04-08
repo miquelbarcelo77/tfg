@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const ingredientes = [
     { nombre: 'tomate', modelo: './assets/tomato.glb', scale: '1.5 1.5 1.5' },
     { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5' },
+    { nombre: 'patata', modelo: './assets/patata.glb', scale: '1.5 1.5 1.5' },
+    { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5' },
+
     // Otros ingredientes...
   ];
 
@@ -98,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(data);
         // Iterar sobre los ingredientes obtenidos de la base de datos
         data.forEach((ingrediente, index) => {
-          const positionX = 6 + index + 0.2; // Ajustar para la posición X
+          const positionX = index/2 + 6 ; // Ajustar para la posición X
           const position = `${positionX} 1 -3`; // Calcular la posición del ingrediente
           const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
           const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/tomato.glb';
@@ -552,9 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
         objetivos.forEach((objetivo, index) => {
           // Crea el plane para el objetivo
           const objetivoEl = document.createElement('a-plane');
-          objetivoEl.setAttribute('position', { x: 8, y: 1.5 - index * 0.5, z: 1}); // Ajusta la posición según necesites
+          objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2}); // Ajusta la posición según necesites
           objetivoEl.setAttribute('rotation', '0 -90 0')
-          objetivoEl.setAttribute('width', '4');
+          objetivoEl.setAttribute('width', '7');
           objetivoEl.setAttribute('height', '0.4');
           objetivoEl.setAttribute('color', '#FFF');
 
@@ -571,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
           // Crea el icono de estado (tick verde o X roja)
           const iconoEstadoEl = document.createElement('a-image');
           iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
-          iconoEstadoEl.setAttribute('position', '1.8 0 0.1');
+          iconoEstadoEl.setAttribute('position', '2.3 0 0.1');
           iconoEstadoEl.setAttribute('height', '0.3');
           iconoEstadoEl.setAttribute('width', '0.3');
 

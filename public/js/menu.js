@@ -12,39 +12,42 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector('a-scene').addEventListener('loaded', function () {
         var botonTumbet = document.querySelector('#botonTumbet');
         // Obtiene referencia al botón de Tortilla
-        var botonTortilla = document.querySelector('#botonTortilla');
-        // Obtiene referencia al botón de Pa amb Oli
-        var botonPaAmbOli = document.querySelector('#botonPaAmbOli');
-
-        // Cuando se haga clic en el botón de Inicio
-        /*botonInicio.addEventListener('click', function () {
-            // Oculta el menú inicial
-            //var menuInicial = document.querySelector('#menuInicial');
-            //menuInicial.setAttribute('visible', 'false');
-
-            // Muestra el menú de inicio
-            var menuInicio = document.querySelector('#menuInicio');
-            menuInicio.setAttribute('visible', 'true');
-        });*/
-
+        var botonCocaDeTrampo = document.querySelector('#botonCocaDeTrampo');
+        
         // Cuando se haga clic en el botón de Tumbet
         botonTumbet.addEventListener('click', function () {
             // Redirige a la página de inicio.html al hacer clic en el botón de Tumbet
-            window.location.href = 'inicio.html';
+            crearPartidaYRedirigir('Tumbet');
         });
 
         // Cuando se haga clic en el botón de Tortilla
-        botonTortilla.addEventListener('click', function () {
-            // Redirige a la página de inicio.html al hacer clic en el botón de Tortilla
-            window.location.href = 'inicio.html';
-        });
-
-        // Cuando se haga clic en el botón de Pa amb Oli
-        botonPaAmbOli.addEventListener('click', function () {
-            // Redirige a la página de inicio.html al hacer clic en el botón de Pa amb Oli
-            window.location.href = 'inicio.html';
+        botonCocaDeTrampo.addEventListener('click', function () {
+            // Redirige a la página de inicio.html al hacer clic en el botón de Coca de Trampó
+            crearPartidaYRedirigir('Coca de Trampo');
         });
     });
+
+    function crearPartidaYRedirigir(nombreNivel) {
+        fetch('/nuevaPartida', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ nivel: nombreNivel, /* otros datos necesarios */ }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success && data.idPartida) {
+                window.location.href = `inicio.html?partidaId=${data.idPartida}`;
+            } else {
+                console.error('No se pudo crear la partida.');
+                // Manejar el error adecuadamente
+            }
+        })
+        .catch(error => {
+            console.error('Error al crear la partida:', error);
+        });
+    }
     
     menuOpcionesButton.addEventListener('click', () => {
         menuVolumen.setAttribute('visible', true);

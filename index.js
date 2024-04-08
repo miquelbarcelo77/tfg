@@ -52,8 +52,8 @@ app.post('/nuevaPartida', (req, res) => {
 
     // Establecer la cookie con el ID de la partida
     res.cookie('Cookie', Cookie, { maxAge: 900000, httpOnly: true });
-
-    res.json({ success: true, message: 'Creada correctamente' });
+    const idPartida = results.insertId; // Este nombre puede variar según el driver de base de datos
+    res.json({ success: true, message: 'Creada correctamente', idPartida: idPartida });
   });
 });
 
