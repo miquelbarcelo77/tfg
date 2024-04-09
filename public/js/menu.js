@@ -3,10 +3,11 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     const menuOpcionesButton = document.querySelector('#menuOpcionesButton');
-    const menuVolumen = document.querySelector('#menuVolumen');
+    const menuOpcionesOpen = document.querySelector('#menuOpcionesOpen');
     const retrocesoButton = document.querySelector('#retrocesoButton');
     const botonSubirVolumen = document.querySelector('#botonSubirVolumen');
     const botonBajarVolumen = document.querySelector('#botonBajarVolumen');
+    const logoutButton = document.querySelector('#botonSalir');
 
     // Espera a que se cargue la escena
     document.querySelector('a-scene').addEventListener('loaded', function () {
@@ -33,15 +34,14 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ nivel: nombreNivel, /* otros datos necesarios */ }),
+            body: JSON.stringify({ nivel: nombreNivel }),
         })
         .then(response => response.json())
         .then(data => {
-            if(data.success && data.idPartida) {
-                window.location.href = `inicio.html?partidaId=${data.idPartida}`;
+            if(data.success) {
+                window.location.href = `inicio.html`; // Simplificado
             } else {
                 console.error('No se pudo crear la partida.');
-                // Manejar el error adecuadamente
             }
         })
         .catch(error => {
@@ -49,12 +49,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
     
+    logoutButton.addEventListener('click', () => {
+        localStorage.removeItem('usuarioAutenticado');
+        window.location.href = 'index.html';
+    })
+    
     menuOpcionesButton.addEventListener('click', () => {
-        menuVolumen.setAttribute('visible', true);
+        menuOpcionesOpen.setAttribute('visible', true);
     });
 
     retrocesoButton.addEventListener('click', () => {
-        menuVolumen.setAttribute('visible', false);
+        menuOpcionesOpen.setAttribute('visible', false);
     });
 
     function ajustarVolumen(cambio) {
@@ -111,8 +116,29 @@ function seleccionarPartida() {
 }
 
 function cargarPartida(idPartida) {
-    window.location.href = `inicio.html?partidaId=${idPartida}`;
+    fetch('/seleccionarPartida', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idPartida: idPartida }), // Envía el idPartida al backend
+        credentials: 'include', // Para incluir cookies de sesión, si las usas
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            window.location.href = 'inicio.html'; // Redirige sin pasar idPartida en la URL
+        } else {
+            console.error('No se pudo seleccionar la partida.', data.message);
+            // Maneja el error mostrando un mensaje al usuario, si es necesario
+        }
+    })
+    .catch(error => {
+        console.error('Error al seleccionar la partida:', error);
+        // Maneja el error mostrando un mensaje al usuario, si es necesario
+    });
 }
+
 
 function nuevaPartida() {
     console.log("Click");
@@ -155,6 +181,7 @@ function iniciarSesion(username) {
     }
     document.querySelector('#selectPartidaMenu').setAttribute('visible', 'true'); // Mostrar menú de partida
     alert("Sesión iniciada, usuario: " + username);
+    localStorage.setItem('usuarioAutenticado', 'true');
 }
 
 function enviarNombreUsuario() {

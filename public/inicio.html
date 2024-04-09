@@ -97,14 +97,14 @@
 
         <!-- <a-entity id="rig" movement-controls position="0 1.5 0">
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10"></a-camera>
-            <a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
+            <!--<a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
                 cursor="rayOrigin:mouse" static-body="shape: sphere; sphereRadius: 0.001" super-hands="colliderEvent: raycaster-intersection;
                              colliderEventProperty: els;
                              colliderEndEvent:raycaster-intersection-cleared;
                              colliderEndEventProperty: clearedEls;">
 
             </a-entity>
-            <!-- <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
+            <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
             </a-entity>
             <a-entity id="lhand" mixin="physics-hands" hand-controls="hand: left">
             </a-entity>
@@ -291,8 +291,8 @@
                 </a-plane>
             </a-entity>
 
-            <!-- Menú de volumen, inicialmente no visible -->
-            <a-entity id="menuVolumen" position="-2 1.5 0.8" rotation="0 0 0" visible="false">
+            <!-- Menú de opciones abierto, inicialmente no visible -->
+            <a-entity id="menuOpcionesOpen" position="-2 1.5 0.8" rotation="0 0 0" visible="false">
                 <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
                     <a-text value="Volumen" align="center"></a-text>
                 </a-plane>
@@ -305,6 +305,9 @@
                 </a-plane>
                 <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75" height="0.2">
                     <a-text value="-" align="center"></a-text>
+                </a-plane>
+                <a-plane id="botonSalir" position="0 -1 0" material="color: #F00" width="2" height="0.2">
+                    <a-text value="Salir del juego" align="center"></a-text>
                 </a-plane>
             </a-entity>
         </a-entity>

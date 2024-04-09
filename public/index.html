@@ -15,8 +15,9 @@
     <a-scene keyboard-shortcuts="enterVR: false">
         <a-assets>
             <a-entity id="audioEntity">
-                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1" positional="false"></a-sound>
-            </a-entity>              
+                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1"
+                    positional="false"></a-sound>
+            </a-entity>
             <img src="assets/sky2.jpg" id="sky">
             <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
             <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
@@ -47,7 +48,10 @@
                 <a-text id="" value="BIENVENIDO" align="center" position="0 0.8 0.1" width="6"></a-text>
                 <a-text id="inputField" value="Escribe tu usuario" align="center" position="0 0.5 0.1"
                     width="4"></a-text>
+                    
                 <a-entity id="keyboard" a-keyboard position="-1 0.3 0.1" scale="4 4 4"></a-entity>
+
+                <!-- Indicaciones -->
             </a-plane>
         </a-entity>
         <a-entity id="menuOpciones" position="-2 0.5 0.8" rotation="0 70 0">
@@ -57,7 +61,7 @@
         </a-entity>
 
         <!-- Menú de volumen, inicialmente no visible -->
-        <a-entity id="menuVolumen" position="-2 1.5 0.8" rotation="0 70 0" visible="false">
+        <a-entity id="menuOpcionesOpen" position="-2 2.5 0.8" rotation="0 70 0" visible="false">
             <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
                 <a-text value="Volumen" align="center"></a-text>
             </a-plane>
@@ -70,6 +74,9 @@
             </a-plane>
             <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75" height="0.2">
                 <a-text value="-" align="center"></a-text>
+            </a-plane>
+            <a-plane id="botonSalir" position="0 -1 0" material="color: #F00" width="2" height="0.2">
+                <a-text value="Salir del juego" align="center"></a-text>
             </a-plane>
         </a-entity>
 
@@ -95,7 +102,8 @@
                     <a-text value="Tumbet" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
                 </a-box>
                 <a-box id="botonCocaDeTrampo" color="blue" width="2" height="1" depth="0.1" position="0 -1.5 0.05">
-                    <a-text value="Coca de trampó" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
+                    <a-text value="Coca de trampó" color="white" align="center" scale="2 2 2"
+                        position="0 0 0.1"></a-text>
                 </a-box>
             </a-entity>
         </a-entity>

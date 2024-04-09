@@ -1,17 +1,33 @@
 document.addEventListener('DOMContentLoaded', () => {
   const menuOpcionesButton = document.querySelector('#menuOpcionesButton');
+  const menuOpcionesOpen = document.querySelector('#menuOpcionesOpen');
+  const logoutButton = document.querySelector('#botonSalir');
   const fireSource = document.getElementById('fireSource');
   let fireCreated = false; // Indicador de si el anillo de fuego está activo
   let fireBoxes = []; // Almacenar las cajas de fuego para poder eliminarlas
 
+  // En el archivo JavaScript que se carga con inicio.html
+
+  const usuarioAutenticado = localStorage.getItem('usuarioAutenticado');
+  console.log(usuarioAutenticado);
+  if (usuarioAutenticado !== 'true') {
+    // Si no hay indicación de un usuario autenticado, redirigir a index.html
+    window.location.href = 'index.html';
+  }
+
   //OPTIONS
   menuOpcionesButton.addEventListener('click', () => {
-    menuVolumen.setAttribute('visible', true);
+    menuOpcionesOpen.setAttribute('visible', true);
   });
 
   retrocesoButton.addEventListener('click', () => {
-    menuVolumen.setAttribute('visible', false);
+    menuOpcionesOpen.setAttribute('visible', false);
   });
+
+  logoutButton.addEventListener('click', () => {
+    localStorage.removeItem('usuarioAutenticado');
+    window.location.href = 'index.html';
+  })
 
   function ajustarVolumen(cambio) {
     const audioEntity = document.querySelector('#audioEntity a-sound');
@@ -86,63 +102,85 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   const ingredientes = [
-    { nombre: 'tomate', modelo: './assets/tomato.glb', scale: '1.5 1.5 1.5' },
-    { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5' },
-    { nombre: 'patata', modelo: './assets/patata.glb', scale: '1.5 1.5 1.5' },
-    { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5' },
+    { nombre: 'tomate', modelo: './assets/tomato.glb', scale: '1.5 1.5 1.5', color: 'red' },
+    { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5', color: 'yellow' },
+    { nombre: 'patata', modelo: './assets/patata.glb', scale: '1.5 1.5 1.5', color: 'green' },
+    { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5', color: 'blue' },
 
     // Otros ingredientes...
   ];
 
+  // Ajuste en la función agregarIngredientes para incluir EsTallat
   function agregarIngredientes() {
     fetch('/ingredientes')
       .then(response => response.json())
       .then(data => {
-        console.log(data);
-        // Iterar sobre los ingredientes obtenidos de la base de datos
+        if (!Array.isArray(data)) {
+          console.error('Se esperaba un array, se recibió:', data);
+          // Manejar adecuadamente la situación, posiblemente mostrando un mensaje al usuario
+          return; // Salir de la función si los datos no son un array
+        }
         data.forEach((ingrediente, index) => {
-          const positionX = index/2 + 6 ; // Ajustar para la posición X
-          const position = `${positionX} 1 -3`; // Calcular la posición del ingrediente
+          const positionX = index / 2 + 6;
+          const position = `${positionX} 1 -3`;
           const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
-          const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/tomato.glb';
+          const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/default.glb';
           const escala = ingredienteEncontrado ? ingredienteEncontrado.scale : '0.1 0.1 0.1';
+          let entity; // Define fuera del if para usarlo después en ambos casos
 
-          // Crear la entidad <a-entity> para el ingrediente
-          const entity = document.createElement('a-entity');
-          entity.setAttribute('position', position);
-          entity.setAttribute('gltf-model', modelo);
-          entity.setAttribute('scale', escala);
-          entity.setAttribute('mixin', 'grab');
-          entity.setAttribute('class', 'grab ingrediente');
-          entity.setAttribute('data-vida', ingrediente.PuntsVida); // Añade puntos de vida como atributo
-          entity.setAttribute('reset', `resetPosition: ${position}`);
-          entity.setAttribute('colocado-en-tabla', '');
+          // Verificar si el ingrediente está cortado
+          if (ingrediente.EsTallat) {
+            // Añadir cuadrados que representan el ingrediente cortado
+            for (let i = 0; i < 4; i++) {
+              const piece = document.createElement('a-box');
+              const offsetX = (i % 2) * 0.2 - 0.1; // Alternar la posición en X para 2 piezas
+              const offsetY = Math.floor(i / 2) * 0.2 - 0.1; // Alternar la posición en Y para las 2 piezas
+              piece.setAttribute('position', `${positionX + offsetX} 1 ${-3 + offsetY}`); // Ajuste de posición Z para que no se superpongan
+              piece.setAttribute('rotation', '0 0 0');
+              piece.setAttribute('width', '0.15');
+              piece.setAttribute('mixin', 'grab');
+              piece.setAttribute('class', 'grab');
+              piece.setAttribute('height', '0.15');
+              piece.setAttribute('color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347'); // Usar color definido o uno por defecto
+              document.querySelector('a-scene').appendChild(piece);
+            }
+          } else {
+            // Crear la entidad <a-entity> para el ingrediente no cortado
+            entity = document.createElement('a-entity');
+            entity.setAttribute('position', position);
+            entity.setAttribute('gltf-model', modelo);
+            entity.setAttribute('scale', escala);
+            entity.setAttribute('mixin', 'grab');
+            entity.setAttribute('class', 'grab ingrediente');
+            entity.setAttribute('data-vida', ingrediente.PuntsVida);
+            entity.setAttribute('reset', `resetPosition: ${position}`);
+            entity.setAttribute('colocado-en-tabla', '');
+            document.querySelector('a-scene').appendChild(entity);
+          }
+          // Crear y añadir la barra de progreso
+          if (!ingrediente.EsTallat && entity) {
+            const progressBar = document.createElement('a-box');
+            const progressBarPosition = `${positionX} ${parseFloat(position.split(' ')[1])} -3`; // Posición Y ligeramente arriba del ingrediente
+            progressBar.setAttribute('position', progressBarPosition);
+            const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
+            const anchoBarra = vidaInicial / 5; // Calcula el ancho basado en los puntos de vida
+            progressBar.setAttribute('width', anchoBarra.toString());
+            progressBar.setAttribute('height', '0.02');
+            progressBar.setAttribute('depth', '0.05');
+            progressBar.setAttribute('color', 'green'); // Color verde para representar la salud
 
-
-          // Crear la entidad de la barra de progreso
-          const progressBar = document.createElement('a-box');
-          const progressBarPosition = `${positionX} ${parseFloat(position.split(' ')[1])} -3`; // Posición Y ligeramente arriba del ingrediente
-          progressBar.setAttribute('position', progressBarPosition);
-          const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
-          const anchoBarra = vidaInicial / 5; // Calcula el ancho basado en los puntos de vida
-          progressBar.setAttribute('width', anchoBarra.toString());
-          progressBar.setAttribute('height', '0.02');
-          progressBar.setAttribute('depth', '0.05');
-          progressBar.setAttribute('color', 'green'); // Color verde para representar la salud
-
-          progressBar.classList.add('barra-vida');
-          progressBar.setAttribute('data-nomInteractuable', ingrediente.NomInteractuable);
-
-          entity.barraProgreso = progressBar; // Guardar referencia a la barra de progreso en el ingrediente
-          entity.setAttribute('actualizar-barra-progreso', '');
-
-          // Agregar la entidad de la barra de progreso al escenario
-          document.querySelector('a-scene').appendChild(entity);
-          document.querySelector('a-scene').appendChild(progressBar);
+            progressBar.classList.add('barra-vida');
+            progressBar.setAttribute('data-nomInteractuable', ingrediente.NomInteractuable);
+            entity.barraProgreso = progressBar; // Guardar referencia a la barra de progreso en el ingrediente
+            entity.setAttribute('actualizar-barra-progreso', '');
+            document.querySelector('a-scene').appendChild(progressBar);
+          }
         });
       })
       .catch(error => console.error('Error al obtener ingredientes:', error));
   }
+
+
 
   AFRAME.registerComponent('actualizar-barra-progreso', {
     tick: function () {
@@ -542,11 +580,10 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log(idPartida); // Solo para demostración, reemplázalo por lo que necesites hacer
 
   // Por ejemplo, cargar los objetivos para esta IdPartida
-  cargarObjetivosDePartida(idPartida);
+  cargarObjetivosDePartida();
 
-  function cargarObjetivosDePartida(idPartida) {
-    // Asumiendo que tienes una función para hacer esto, reemplaza este código según necesites
-    fetch(`/obtenerObjetivos/${idPartida}`)
+  function cargarObjetivosDePartida() {
+    fetch(`/obtenerObjetivos`) // Ya no necesitas pasar el idPartida en la URL
       .then(response => response.json())
       .then(objetivos => {
         console.log(objetivos); // Haz algo con los objetivos aquí
@@ -555,8 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
         objetivos.forEach((objetivo, index) => {
           // Crea el plane para el objetivo
           const objetivoEl = document.createElement('a-plane');
-          objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2}); // Ajusta la posición según necesites
-          objetivoEl.setAttribute('rotation', '0 -90 0')
+          objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2 }); // Ajusta la posición según necesites
+          objetivoEl.setAttribute('rotation', '0 -90 0');
           objetivoEl.setAttribute('width', '7');
           objetivoEl.setAttribute('height', '0.4');
           objetivoEl.setAttribute('color', '#FFF');
@@ -588,6 +625,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(error => console.error('Error al cargar objetivos:', error));
   }
 
+
   function completarObjetivo(idPartida, idObj) {
     const url = '/api/completarObjetivo'; // URL de tu endpoint
     const data = {
@@ -595,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
       idObj: idObj,
       completado: true // Asumiendo que siempre completarás el objetivo con esta función
     };
-  
+
     fetch(url, {
       method: 'POST', // o 'PUT'
       headers: {
@@ -603,17 +641,17 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       body: JSON.stringify(data),
     })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Objetivo completado:', data);
-      // Aquí puedes añadir cualquier lógica adicional que necesites ejecutar tras completar el objetivo.
-      // Por ejemplo, actualizar la interfaz de usuario para reflejar que el objetivo se ha completado.
-    })
-    .catch((error) => {
-      console.error('Error al completar el objetivo:', error);
-    });
+      .then(response => response.json())
+      .then(data => {
+        console.log('Objetivo completado:', data);
+        // Aquí puedes añadir cualquier lógica adicional que necesites ejecutar tras completar el objetivo.
+        // Por ejemplo, actualizar la interfaz de usuario para reflejar que el objetivo se ha completado.
+      })
+      .catch((error) => {
+        console.error('Error al completar el objetivo:', error);
+      });
   }
-  
+
 
 
 
