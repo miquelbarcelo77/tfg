@@ -141,36 +141,12 @@ function cargarPartida(idPartida) {
 
 
 function nuevaPartida() {
-    console.log("Click");
     document.getElementById("selectPartidaMenu").setAttribute('visible', 'false');
     document.getElementById("menuInicio").setAttribute('visible', 'true');
     var selectPartidaMenu = document.getElementById("selectPartidaMenu");
     while (selectPartidaMenu.firstChild) {
         selectPartidaMenu.removeChild(selectPartidaMenu.firstChild);
     }
-}
-
-function iniciarPartida(nivel) {
-    console.log("HOLA");
-    fetch('/nuevaPartida', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Asegúrate de incluir las cookies de sesión
-        body: JSON.stringify({ nivel: nivel }) // Solo envía el nivel
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // La partida se ha creado exitosamente en el servidor
-                console.log('Success');
-                window.location.assign("inicio.html");
-            } else {
-                console.error('Error al iniciar partida');
-            }
-        })
-        .catch(error => console.error('Error:', error));
 }
 
 function iniciarSesion(username) {
@@ -180,7 +156,7 @@ function iniciarSesion(username) {
         loginMenu.removeChild(loginMenu.firstChild);
     }
     document.querySelector('#selectPartidaMenu').setAttribute('visible', 'true'); // Mostrar menú de partida
-    alert("Sesión iniciada, usuario: " + username);
+    console.log("Sesion iniciada, usuario:" + username)
     localStorage.setItem('usuarioAutenticado', 'true');
 }
 
@@ -222,7 +198,6 @@ function guardarUsuario(username) {
         contentType: "application/json",
         data: JSON.stringify({ username: username }),
         success: function (response) {
-            alert("Nombre de usuario guardado correctamente");
             // Activar los controles WASD de la cámara
             var camera = document.getElementById("camera");
             camera.setAttribute("wasd-controls", "enabled: true");
@@ -263,7 +238,6 @@ function updateInput(e) {
             input = input.slice(0, -1);
             break;
         case 13: // Enter
-            alert('Submitted');
             var inputField = document.querySelector('#inputField');
             inputField.setAttribute('value', input);
             inputField.setAttribute('color', 'blue');

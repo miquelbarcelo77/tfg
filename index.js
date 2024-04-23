@@ -17,6 +17,13 @@ const connection = mysql.createConnection({
   database: 'tfg'
 });
 
+connection.connect(error => {
+  if (error) {
+    return console.error('Error al conectar a la base de datos:', error);
+  }
+  console.log('Conectado a la base de datos MySQL');
+});
+
 //Us de json a solicituds
 app.use(express.json());
 
@@ -91,7 +98,7 @@ app.post('/nuevaPartida', (req, res) => {
   console.log(usuarioNombre);
   const Cookie = uuidv4();
 
-  const query = 'INSERT INTO Partida (NomNiv, NomUs, Cookie) VALUES (?, ?, ?)';
+  const query = 'INSERT INTO partida (NomNiv, NomUs, Cookie) VALUES (?, ?, ?)';
   connection.query(query, [nivel, usuarioNombre, Cookie], (error, results) => {
     if (error) {
       console.error('Error al insertar la partida:', error);
@@ -121,7 +128,7 @@ app.get('/obtenerPartidas', (req, res) => {
   const usuarioNombre = req.session.usuario.nombre;
 
   // Consulta para obtener las partidas del usuario
-  const query = 'SELECT IdPartida, NomNiv FROM Partida WHERE NomUs = ?';
+  const query = 'SELECT IdPartida, NomNiv FROM partida WHERE NomUs = ?';
 
   connection.query(query, [usuarioNombre], (error, results) => {
     if (error) {
@@ -153,7 +160,7 @@ app.get('/ingredientes', (req, res) => {
   const idPartida = req.session.partidaId;
 
   // Obtener el nivel asociado a la partida
-  const queryNivel = 'SELECT NomNiv FROM Partida WHERE IdPartida = ?';
+  const queryNivel = 'SELECT NomNiv FROM partida WHERE IdPartida = ?';
   connection.query(queryNivel, [idPartida], (error, resultsNivel) => {
     if (error || resultsNivel.length === 0) {
       console.error('Error al obtener el nivel de la partida:', error);
@@ -165,14 +172,15 @@ app.get('/ingredientes', (req, res) => {
     // Ajustar la consulta para incluir el estado EsTallat de la tabla Partida_Interactuable_Estado
     const queryIngredientes = `
       SELECT 
+        i.IdInteractuable,
         i.NomInteractuable, 
         pv.PuntsVida,
         COALESCE(pie.EsTallat, FALSE) AS EsTallat
       FROM 
-        Interactuable i
-        INNER JOIN Nivell_Interactuable ni ON i.IdInteractuable = ni.IdInteractuable
-        INNER JOIN PuntsVida pv ON i.NomTipus = pv.NomTipus
-        LEFT JOIN Partida_Interactuable pie ON i.IdInteractuable = pie.IdInteractuable AND pie.IdPartida = ?
+        interactuable i
+        INNER JOIN nivell_interactuable ni ON i.IdInteractuable = ni.IdInteractuable
+        INNER JOIN puntsvida pv ON i.NomTipus = pv.NomTipus
+        LEFT JOIN partida_interactuable pie ON i.IdInteractuable = pie.IdInteractuable AND pie.IdPartida = ?
       WHERE 
         ni.NomNiv = ?
     `;
@@ -185,6 +193,39 @@ app.get('/ingredientes', (req, res) => {
       console.log(`Ingredientes obtenidos para el nivel ${nomNiv}:`, resultsIngredientes);
       res.json(resultsIngredientes);
     });
+  });
+});
+
+// Endpoint para marcar un ingrediente como cortado
+// Endpoint para marcar un ingrediente como cortado usando el idPartida desde la sesión
+app.post('/actualizar-estado-ingrediente', (req, res) => {
+  if (!req.session.usuario || !req.session.partidaId) {
+    return res.status(401).json({ success: false, message: 'Usuario no autenticado o partida no iniciada' });
+  }
+
+  const idPartida = req.session.partidaId;
+  const { idInteractuable, esTallat } = req.body;
+
+  // Verificar que todos los campos necesarios están presentes
+  if (idInteractuable === undefined || esTallat === undefined) {
+    return res.status(400).json({ success: false, message: 'Datos incompletos para la actualización' });
+  }
+
+  // Preparar la consulta SQL para actualizar el estado EsTallat
+  const query = `
+    INSERT INTO partida_interactuable (IdPartida, IdInteractuable, EsTallat)
+    VALUES (?, ?, ?)
+    ON DUPLICATE KEY UPDATE EsTallat = VALUES(EsTallat);
+  `;
+
+  // Ejecutar la consulta
+  connection.query(query, [idPartida, idInteractuable, esTallat], (error, results) => {
+    if (error) {
+      console.error('Error al actualizar el estado del ingrediente:', error);
+      return res.status(500).json({ success: false, message: 'Error al actualizar el estado del ingrediente' });
+    }
+
+    res.json({ success: true, message: 'Estado del ingrediente actualizado correctamente' });
   });
 });
 
@@ -202,7 +243,7 @@ app.get('/obtenerObjetivos', (req, res) => {
   const idPartida = req.session.partidaId; // Usar el ID de la partida de la sesión
 
   // Primero, obtenemos el nivel asociado a la partida
-  const queryNivel = 'SELECT NomNiv FROM Partida WHERE IdPartida = ?';
+  const queryNivel = 'SELECT NomNiv FROM partida WHERE IdPartida = ?';
 
   connection.query(queryNivel, [idPartida], (error, resultsNivel) => {
     if (error || resultsNivel.length === 0) {
@@ -221,9 +262,9 @@ app.get('/obtenerObjetivos', (req, res) => {
           o.Temps, 
           IFNULL(po.Completado, FALSE) as Completado
       FROM 
-          Objectiu o
+          objectiu o
       LEFT JOIN 
-          Partida_Objectiu po ON o.IdObj = po.IdObj AND po.IdPartida = ?
+          partida_objectiu po ON o.IdObj = po.IdObj AND po.IdPartida = ?
       WHERE 
           o.NomNiv = ?
     `;
@@ -249,7 +290,7 @@ app.post('/api/completarObjetivo', (req, res) => {
 
   // Asumiendo que ya tienes establecida la conexión con la base de datos
   const query = `
-      UPDATE Partida_Objectiu 
+      UPDATE partida_objectiu 
       SET Completado = ? 
       WHERE IdPartida = ? AND IdObj = ?`;
 
@@ -280,7 +321,7 @@ io.on('connection', (socket) => {
   });
 });
 
-// Iniciar el servidor en el puerto 3000
+// Iniciar el servidor en el puerto 80
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor Express y Socket.IO en funcionamiento en el puerto ${PORT}`);

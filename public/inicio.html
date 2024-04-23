@@ -82,7 +82,7 @@
             animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
             animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
 
-        <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
+        <!-- <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10" look-controls
                 raycaster="objects: .colisionable">
                 <a-cursor id="cursor"
@@ -93,25 +93,26 @@
 
             <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
                 volume="0.3"></a-sound>
-        </a-entity>
+        </a-entity> -->
 
-        <!-- <a-entity id="rig" movement-controls position="0 1.5 0">
-            <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10"></a-camera>
-            <!--<a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
+        <a-entity id="rig" movement-controls position="0 0.3 0">
+            <!-- <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10"></a-camera> -->
+            <a-entity camera wasd-controls position="0 1 1" capture-mouse raycaster="objects: .grab"
                 cursor="rayOrigin:mouse" static-body="shape: sphere; sphereRadius: 0.001" super-hands="colliderEvent: raycaster-intersection;
                              colliderEventProperty: els;
                              colliderEndEvent:raycaster-intersection-cleared;
                              colliderEndEventProperty: clearedEls;">
-
+            
             </a-entity>
             <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
             </a-entity>
-            <a-entity id="lhand" mixin="physics-hands" hand-controls="hand: left">
+            <a-entity id="lhand" laser-controls="hand: left" raycaster="objects: .clickable; far: 10"
+                line="color: red; opacity: 0.5">
             </a-entity>
 
             <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
                 volume="0.3"></a-sound>
-        </a-entity> -->
+        </a-entity>
 
         <script>
             // turn controller's physics presence on only while button held down
@@ -146,7 +147,7 @@
             colocado-en-tabla></a-entity>
 
         <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0"
-            scale="0.2 0.2 0.2" vibrate-on-click progress-bar></a-entity>
+            scale="0.2 0.2 0.2" vibrate-on-click progress-bar class="clickable"></a-entity>
 
         <a-entity id="fireSource" gltf-model="url(assets/fogons.glb)" position="-2.2 0.55 -3" rotation="0 0 0"
             scale="0.065 0.065 0.065"></a-entity>
@@ -155,7 +156,7 @@
             rotation="0 70 0"></a-entity>
 
         <a-entity id="fryingPan" mixin="grab" class="grab" gltf-model="url(assets/frying_pan.glb)" position="-2 2 -3"
-            rotation="0 0 0" scale="0.02 0.02 0.02" reset="resetPosition: 0 2 -3">
+            rotation="0 0 0" scale="0.02 0.02 0.02" reset="resetPosition: 0 2 -3" sarten>
         </a-entity>
 
         <a-entity id="kitchenKnife" mixin="grab" class="grab" gltf-model="url(assets/kitchen_knife.glb)"

@@ -45,6 +45,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fireCreated) {
       fireBoxes = createFireRing(); // Actualiza la lista de cajas con las nuevas creadas
       fireCreated = true;
+      const sartenEl = document.querySelector('#fryingPan');
+      sartenEl.setAttribute('sarten', 'cooking', !sartenEl.getAttribute('sarten').cooking);
     } else {
       // Eliminar todas las cajas de fuego
       for (let box of fireBoxes) {
@@ -87,6 +89,76 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return localFireBoxes; // Devolver el arreglo local para ser usado fuera
   }
+
+  AFRAME.registerComponent('sarten', {
+    schema: {
+      cooking: { type: 'bool', default: false }, // indica si los fogones están encendidos
+      hasIngredient: { type: 'bool', default: false } // indica si hay un ingrediente en la sartén
+    },
+
+    init: function () {
+      this.el.addEventListener('collide', this.handleCollision.bind(this));
+      this.progress = null; // Referencia a la barra de progreso
+      this.ingredient = null; // Referencia al ingrediente actual
+    },
+
+    handleCollision: function (e) {
+      const collidedEl = e.detail.body.el;
+      if (collidedEl.classList.contains('ingrediente') && !this.data.hasIngredient) {
+        this.data.hasIngredient = true;
+        this.ingredient = collidedEl; // Almacena referencia al ingrediente
+        // Coloca el ingrediente en la sartén
+        collidedEl.setAttribute('position', '0 0.1 0'); // Ajustar según la posición y escala de la sartén
+        collidedEl.setAttribute('static-body', '');
+        collidedEl.setAttribute('data-in-cooking', true); // Marcar el ingrediente para la cocción
+        this.tryStartCooking();
+      }
+    },
+
+    tryStartCooking: function () {
+      if (this.data.cooking && this.data.hasIngredient) {
+        this.startCooking();
+      }
+    },
+
+    startCooking: function () {
+      if (!this.progress) {
+        this.progress = document.createElement('a-box');
+        this.progress.setAttribute('width', '0.02');
+        this.progress.setAttribute('height', '0.05');
+        this.progress.setAttribute('depth', '0.2');
+        this.progress.setAttribute('color', 'green');
+        this.progress.setAttribute('position', '0 0.2 0');
+        this.el.appendChild(this.progress);
+
+        this.updateProgress();
+      }
+    },
+
+    updateProgress: function () {
+      const interval = setInterval(() => {
+        let newWidth = parseFloat(this.progress.getAttribute('width')) + 0.2 / 40; // Duración de 8s dividido en intervalos
+        this.progress.setAttribute('width', newWidth.toString());
+
+        if (newWidth >= 0.2) {
+          clearInterval(interval);
+          this.el.removeChild(this.progress); // Elimina la barra de progreso
+          this.progress = null;
+          this.data.hasIngredient = false;
+          this.ingredient.parentNode.removeChild(this.ingredient); // Elimina el ingrediente
+          this.ingredient = null;
+          this.el.emit('cooked'); // Emite un evento indicando que la cocción ha terminado
+        }
+      }, 200); // Actualiza cada 200ms
+    }
+  });
+
+
+  document.querySelector('#fryingPan').addEventListener('cooked', function () {
+    console.log('El ingrediente ha sido cocinado.');
+    // Aquí puedes añadir lógica para remover el ingrediente de la sartén o cambiar su estado
+  });
+
 
   //Cargar los glb con static body
   document.querySelector('#woodenTable').addEventListener('model-loaded', () => {
@@ -241,10 +313,46 @@ document.addEventListener('DOMContentLoaded', () => {
           if (vidaActual <= 0) {
             console.log("vida 0");
             progressBar.setAttribute('hidden', true);
+            this.cortarIngrediente(ingredienteGolpeado);
             // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
           }
         }
       });
+    },
+    cortarIngrediente: function (ingredienteGolpeado) {
+      const idInteractuable = ingredienteGolpeado.getAttribute('data-idInteractuable'); // Asegúrate de que cada ingrediente tiene este atributo
+
+      // Eliminar el ingrediente no cortado
+      ingredienteGolpeado.parentNode.removeChild(ingredienteGolpeado);
+
+      // Llamar a la función que actualiza el estado en el servidor
+      this.ingredienteCortado(idInteractuable);
+
+      console.log("Ingrediente cortado y actualizado en la base de datos.");
+    },
+
+    ingredienteCortado: function (idInteractuable) {
+      fetch('/actualizar-estado-ingrediente', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idInteractuable: idInteractuable,
+          esTallat: true
+        })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Estado del ingrediente actualizado correctamente.');
+          } else {
+            console.error('Error al actualizar el estado del ingrediente:', data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error en la solicitud al servidor:', error);
+        });
     }
   });
 
