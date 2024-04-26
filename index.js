@@ -19,6 +19,7 @@ const connection = mysql.createConnection({
 
 connection.connect(error => {
   if (error) {
+    console.log(error);
     return console.error('Error al conectar a la base de datos:', error);
   }
   console.log('Conectado a la base de datos MySQL');
@@ -46,6 +47,7 @@ app.post('/verificar-usuario', (req, res) => {
   const query = "SELECT COUNT(*) AS count FROM usuari WHERE NomUs = ?";
   connection.query(query, [username], (err, results) => {
     if (err) {
+      console.log(err);
       console.error('Error al ejecutar la consulta: ', err);
       res.status(500).json({ error: 'Error al verificar el nombre de usuario' });
       return;
@@ -86,30 +88,51 @@ app.post('/guardar-usuario', (req, res) => {
 
 //Endpoint que serveix per a crear una partida
 app.post('/nuevaPartida', (req, res) => {
-  console.log("Solicitud a /nuevaPartida recibida");
-  console.log("Estado actual de req.session.usuario:", req.session.usuario);
-
   if (!req.session.usuario || !req.session.usuario.nombre) {
     return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
   }
 
   const { nivel } = req.body;
   const usuarioNombre = req.session.usuario.nombre;
-  console.log(usuarioNombre);
-  const Cookie = uuidv4();
 
-  const query = 'INSERT INTO partida (NomNiv, NomUs, Cookie) VALUES (?, ?, ?)';
-  connection.query(query, [nivel, usuarioNombre, Cookie], (error, results) => {
+  // Insertar nueva partida
+  const insertPartidaQuery = 'INSERT INTO partida (NomNiv, NomUs) VALUES (?, ?)';
+  connection.query(insertPartidaQuery, [nivel, usuarioNombre], (error, partidaResults) => {
     if (error) {
       console.error('Error al insertar la partida:', error);
       return res.status(500).json({ success: false, message: 'Error al crear la partida' });
     }
 
-    req.session.partidaId = results.insertId;
-    res.cookie('Cookie', Cookie, { maxAge: 900000, httpOnly: true });
-    res.json({ success: true, message: 'Creada correctamente' });
+    const nuevaPartidaId = partidaResults.insertId;
+    req.session.partidaId = nuevaPartidaId;
+
+    // Inicializar los objetivos para la nueva partida
+    const selectObjetivosQuery = 'SELECT IdObj FROM objectiu WHERE NomNiv = ?';
+    connection.query(selectObjetivosQuery, [nivel], (error, objetivosResults) => {
+      if (error) {
+        console.error('Error al obtener los objetivos del nivel:', error);
+        return res.status(500).json({ success: false, message: 'Error al obtener objetivos' });
+      }
+
+      // Preparar inserción masiva en Partida_Objectiu
+      const objetivosData = objetivosResults.map(obj => [nuevaPartidaId, obj.IdObj, false]);
+      console.log(objetivosData);
+      console.log(objetivosResults);
+      const insertObjetivosQuery = 'INSERT INTO partida_objectiu (IdPartida, IdObj, Completado) VALUES ?';
+      console.log(insertObjetivosQuery);
+      connection.query(insertObjetivosQuery, [objetivosData], (error) => {
+        if (error) {
+          console.error('Error al insertar objetivos en partida:', error);
+          return res.status(500).json({ success: false, message: 'Error al inicializar objetivos de la partida' });
+        }
+
+        // Todo ha ido bien, enviar confirmación
+        res.json({ success: true, message: 'Partida y objetivos inicializados correctamente', partidaId: nuevaPartidaId });
+      });
+    });
   });
 });
+
 
 app.get('/getPartidaId', (req, res) => {
   if (!req.session.usuario || !req.session.partidaId) {
@@ -196,7 +219,6 @@ app.get('/ingredientes', (req, res) => {
   });
 });
 
-// Endpoint para marcar un ingrediente como cortado
 // Endpoint para marcar un ingrediente como cortado usando el idPartida desde la sesión
 app.post('/actualizar-estado-ingrediente', (req, res) => {
   if (!req.session.usuario || !req.session.partidaId) {
@@ -228,10 +250,6 @@ app.post('/actualizar-estado-ingrediente', (req, res) => {
     res.json({ success: true, message: 'Estado del ingrediente actualizado correctamente' });
   });
 });
-
-
-
-
 
 // Endpoint para obtener los objetivos de una partida específica
 app.get('/obtenerObjetivos', (req, res) => {
@@ -281,18 +299,65 @@ app.get('/obtenerObjetivos', (req, res) => {
   });
 });
 
+app.post('/api/completarObjetivoPorIngrediente', (req, res) => {
+  if (!req.session.usuario || !req.session.partidaId) {
+    return res.status(401).json({ success: false, message: 'Usuario no autenticado o partida no iniciada' });
+  }
 
+  const idPartida = req.session.partidaId;
+  const { idInteractuable } = req.body;
 
+  const getObjetivosQuery = `
+      SELECT IdObj
+      FROM objetivointeractuable
+      WHERE IdInteractuable = ?`;
+
+  connection.query(getObjetivosQuery, [idInteractuable], (error, results) => {
+    if (error) {
+      console.error('Error al obtener los objetivos para el interactuable:', error);
+      return res.status(500).json({ success: false, message: 'Error al obtener los objetivos' });
+    }
+
+    const idsObj = results.map(obj => obj.IdObj);
+
+    if (idsObj.length === 0) {
+      return res.json({ success: true, message: 'No hay objetivos asociados con este interactuable', objetivos: [] });
+    }
+
+    console.log(idsObj);
+
+    const updateObjetivosQuery = `
+      UPDATE partida_objectiu
+      SET Completado = TRUE
+      WHERE IdPartida = ? AND IdObj IN (?)`;
+
+    connection.query(updateObjetivosQuery, [idPartida, [idsObj]], (updateError) => {
+      if (updateError) {
+        console.error('Error al actualizar los objetivos como completados:', updateError);
+        return res.status(500).json({ success: false, message: 'Error al actualizar los objetivos' });
+      }
+
+      // Devolver los objetivos actualizados
+      res.json({ success: true, message: 'Objetivos actualizados correctamente como completados', objetivos: results });
+    });
+  });
+});
 
 
 app.post('/api/completarObjetivo', (req, res) => {
-  const { idPartida, idObj, completado } = req.body;
+  // Verificar si el usuario está autenticado y si existe una partida en curso
+  if (!req.session.usuario || !req.session.partidaId) {
+    return res.status(401).json({ success: false, message: 'No autorizado o partida no iniciada' });
+  }
+  console.log("entroAQUI");
+  const idPartida = req.session.partidaId;
+  const { idObj, completado } = req.body;
 
-  // Asumiendo que ya tienes establecida la conexión con la base de datos
+  console.log(completado);
   const query = `
-      UPDATE partida_objectiu 
-      SET Completado = ? 
-      WHERE IdPartida = ? AND IdObj = ?`;
+    UPDATE partida_objectiu 
+    SET Completado = ?
+    WHERE IdPartida = ? AND IdObj = ?`;
 
   connection.query(query, [completado, idPartida, idObj], (error, results) => {
     if (error) {

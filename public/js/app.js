@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const fireSource = document.getElementById('fireSource');
   let fireCreated = false; // Indicador de si el anillo de fuego está activo
   let fireBoxes = []; // Almacenar las cajas de fuego para poder eliminarlas
-
   // En el archivo JavaScript que se carga con inicio.html
 
   const usuarioAutenticado = localStorage.getItem('usuarioAutenticado');
@@ -92,29 +91,74 @@ document.addEventListener('DOMContentLoaded', () => {
 
   AFRAME.registerComponent('sarten', {
     schema: {
-      cooking: { type: 'bool', default: false }, // indica si los fogones están encendidos
-      hasIngredient: { type: 'bool', default: false } // indica si hay un ingrediente en la sartén
+      cooking: { type: 'bool', default: false },
+      hasIngredient: { type: 'bool', default: false }
     },
 
     init: function () {
+      this.fireIndicator = document.createElement('a-box');
+      this.fireIndicator.setAttribute('position', '-2.2 0.59 -3.05');
+      this.fireIndicator.setAttribute('rotation', '-90 0 0');
+      this.fireIndicator.setAttribute('width', '1');
+      this.fireIndicator.setAttribute('height', '1');
+      this.fireIndicator.setAttribute('depth', '0.1');
+      this.fireIndicator.setAttribute('material', 'color: blue; opacity: 0.2; transparent: true'); // Color azul con opacidad del 50%
+      this.fireIndicator.setAttribute('visible', 'true'); // Inicialmente no visible
+
+      // Añadir el indicador a la escena
+      document.querySelector('a-scene').appendChild(this.fireIndicator);
       this.el.addEventListener('collide', this.handleCollision.bind(this));
-      this.progress = null; // Referencia a la barra de progreso
-      this.ingredient = null; // Referencia al ingrediente actual
+      this.progress = null;
+      this.ingredient = null;
+    },
+
+    tick: function () {
+      this.checkPosition(); // Llama a checkPosition en cada frame
     },
 
     handleCollision: function (e) {
       const collidedEl = e.detail.body.el;
-      if (collidedEl.classList.contains('ingrediente') && !this.data.hasIngredient) {
+      if (collidedEl.getAttribute('data-es-tallat') === 'true' && !this.data.hasIngredient) {
         this.data.hasIngredient = true;
-        this.ingredient = collidedEl; // Almacena referencia al ingrediente
-        // Coloca el ingrediente en la sartén
-        collidedEl.setAttribute('position', '0 0.1 0'); // Ajustar según la posición y escala de la sartén
+        this.ingredient = collidedEl;
+        collidedEl.setAttribute('position', '0 0.1 0');
         collidedEl.setAttribute('static-body', '');
-        collidedEl.setAttribute('data-in-cooking', true); // Marcar el ingrediente para la cocción
+        console.log(collidedEl.getAttribute('static-body)'));
+        collidedEl.setAttribute('data-in-cooking', true);
         this.tryStartCooking();
       }
     },
 
+    checkPosition: function () {
+      // Coordenadas de los fogones y tolerancia para la posición
+      const firePos = { x: -2.2, y: 0.61, z: -3.05 };
+      const tolerance = 0.5;  // Tolerancia de 50cm en todas las direcciones
+      const sartenPos = this.el.object3D.position;
+      // Verificar si la sartén está aproximadamente en la posición de los fogones
+      if (Math.abs(sartenPos.x - firePos.x) <= tolerance &&
+        Math.abs(sartenPos.y - firePos.y) <= tolerance &&
+        Math.abs(sartenPos.z - firePos.z) <= tolerance) {
+        if (!this.data.cooking) { // Solo cambiar a static si previamente no estaba en la posición
+          this.el.setAttribute('static-body', ''); // Hacer la sartén estática
+          console.log("estatico");
+          this.data.cooking = true;
+          this.fireIndicator.setAttribute('visible', 'true');  // Muestra el indicador
+          this.fireIndicator.setAttribute('color', 'green');  // Cambia el color a verde cuando está en posición
+        }
+      } else if (this.data.cooking) {
+        this.el.removeAttribute('static-body'); // Hacer la sartén dinámica si se mueve fuera del rango
+        console.log("estatico2");
+        this.data.cooking = false;
+        this.fireIndicator.setAttribute('visible', 'true');  // Muestra el indicador
+        this.fireIndicator.setAttribute('color', 'blue');  // Cambia el color a verde cuando está en posición
+      }
+    },
+
+    tryStartCooking: function () {
+      if (this.data.cooking && this.data.hasIngredient) {
+        this.startCooking();
+      }
+    },
     tryStartCooking: function () {
       if (this.data.cooking && this.data.hasIngredient) {
         this.startCooking();
@@ -193,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return; // Salir de la función si los datos no son un array
         }
         data.forEach((ingrediente, index) => {
-          const positionX = index / 2 + 6;
+          const positionX = index;// 2 + 6;
           const position = `${positionX} 1 -3`;
           const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
           const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/default.glb';
@@ -203,19 +247,32 @@ document.addEventListener('DOMContentLoaded', () => {
           // Verificar si el ingrediente está cortado
           if (ingrediente.EsTallat) {
             // Añadir cuadrados que representan el ingrediente cortado
+            let container = document.createElement('a-entity');
+            container.setAttribute('position', position);
+
+            // Añadir cuadrados que representan el ingrediente cortado
             for (let i = 0; i < 4; i++) {
-              const piece = document.createElement('a-box');
+              let piece = document.createElement('a-entity');
+              piece.setAttribute('geometry', {
+                primitive: 'cylinder',
+                radius: 0.05,
+                height: 0.01  // Altura muy baja para simular la rodaja
+              });
               const offsetX = (i % 2) * 0.2 - 0.1; // Alternar la posición en X para 2 piezas
-              const offsetY = Math.floor(i / 2) * 0.2 - 0.1; // Alternar la posición en Y para las 2 piezas
-              piece.setAttribute('position', `${positionX + offsetX} 1 ${-3 + offsetY}`); // Ajuste de posición Z para que no se superpongan
+              const offsetZ = Math.floor(i / 2) * 0.2 - 0.1; // Alternar la posición en Y para las 2 piezas
+              piece.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
               piece.setAttribute('rotation', '0 0 0');
-              piece.setAttribute('width', '0.15');
-              piece.setAttribute('mixin', 'grab');
-              piece.setAttribute('class', 'grab');
-              piece.setAttribute('height', '0.15');
-              piece.setAttribute('color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347'); // Usar color definido o uno por defecto
-              document.querySelector('a-scene').appendChild(piece);
+              // Añadir profundidad si es necesario
+              piece.setAttribute('material', 'color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347');
+              container.appendChild(piece);
             }
+            container.setAttribute('mixin', 'grabContainer');
+            container.setAttribute('class', 'grab');
+            container.setAttribute('data-es-tallat', 'true');
+            container.setAttribute('hidden', true);
+            container.setAttribute('reset', `resetPosition: ${position}`);
+            container.setAttribute('data-idInteractuable', ingrediente.IdInteractuable);
+            document.querySelector('a-scene').appendChild(container);
           } else {
             // Crear la entidad <a-entity> para el ingrediente no cortado
             entity = document.createElement('a-entity');
@@ -225,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
             entity.setAttribute('mixin', 'grab');
             entity.setAttribute('class', 'grab ingrediente');
             entity.setAttribute('data-vida', ingrediente.PuntsVida);
+            entity.setAttribute('data-idInteractuable', ingrediente.IdInteractuable);
+            entity.setAttribute('data-color', ingredienteEncontrado.color);  // Guardar el color en el elemento
             entity.setAttribute('reset', `resetPosition: ${position}`);
             entity.setAttribute('colocado-en-tabla', '');
             document.querySelector('a-scene').appendChild(entity);
@@ -251,8 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => console.error('Error al obtener ingredientes:', error));
   }
-
-
 
   AFRAME.registerComponent('actualizar-barra-progreso', {
     tick: function () {
@@ -281,6 +338,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let vidaActual;
         let progressBar;
         const ingredienteGolpeado = e.detail.body.el;
+        const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
+        console.log(idIngredienteGolpeado);
         if (ingredienteGolpeado.classList.contains('ingrediente')) {
           // Supongamos que cada ingrediente tiene un atributo 'data-vida'
           const listoParaCortar = ingredienteGolpeado.getAttribute('data-listo-para-cortar') === 'true';
@@ -312,23 +371,48 @@ document.addEventListener('DOMContentLoaded', () => {
           //Cambiar de ingrediente
           if (vidaActual <= 0) {
             console.log("vida 0");
-            progressBar.setAttribute('hidden', true);
-            this.cortarIngrediente(ingredienteGolpeado);
-            // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
+            progressBar.remove();
+            this.mostrarIngredienteCortado(ingredienteGolpeado);
           }
         }
       });
     },
-    cortarIngrediente: function (ingredienteGolpeado) {
-      const idInteractuable = ingredienteGolpeado.getAttribute('data-idInteractuable'); // Asegúrate de que cada ingrediente tiene este atributo
 
-      // Eliminar el ingrediente no cortado
-      ingredienteGolpeado.parentNode.removeChild(ingredienteGolpeado);
+    mostrarIngredienteCortado: function (ingredienteGolpeado) {
+      // Eliminar la representación actual del ingrediente no cortado
+      let color = ingredienteGolpeado.getAttribute('data-color');  // Obtener el color del atributo data
+      const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
+      console.log(idIngredienteGolpeado);
+      ingredienteGolpeado.remove();
 
-      // Llamar a la función que actualiza el estado en el servidor
-      this.ingredienteCortado(idInteractuable);
+      let cortado = document.createElement('a-entity');
+      cortado.setAttribute('position', '1 0.6 -3');
+      // Crear y mostrar el ingrediente cortado
+      for (let i = 0; i < 4; i++) {
+        let piece = document.createElement('a-entity');
+        piece.setAttribute('geometry', {
+          primitive: 'cylinder',
+          radius: 0.05,
+          height: 0.01  // Altura muy baja para simular la rodaja
+        });
+        const offsetX = (i % 2) * 0.2 - 0.1; // Alternar la posición en X para 2 piezas
+        const offsetZ = Math.floor(i / 2) * 0.2 - 0.1; // Alternar la posición en Y para las 2 piezas
+        piece.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
+        piece.setAttribute('rotation', '0 0 0');
+        // Añadir profundidad si es necesario
+        piece.setAttribute('material', 'color', color);
+        cortado.appendChild(piece);
+      }
+      cortado.setAttribute('mixin', 'grabContainer');
+      cortado.setAttribute('class', 'grab');
+      cortado.setAttribute('data-es-tallat', 'true');
+      cortado.setAttribute('hidden', true);
+      cortado.setAttribute('reset', `resetPosition: 1 0.6 -3`);
+      cortado.setAttribute('data-idInteractuable', idIngredienteGolpeado);
+      document.querySelector('a-scene').appendChild(cortado);
 
-      console.log("Ingrediente cortado y actualizado en la base de datos.");
+      this.ingredienteCortado(idIngredienteGolpeado);
+      console.log("Ingrediente cortado y visualizado.");
     },
 
     ingredienteCortado: function (idInteractuable) {
@@ -346,6 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(data => {
           if (data.success) {
             console.log('Estado del ingrediente actualizado correctamente.');
+            this.verificarYActualizarObjetivo(idInteractuable);
           } else {
             console.error('Error al actualizar el estado del ingrediente:', data.message);
           }
@@ -353,8 +438,45 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(error => {
           console.error('Error en la solicitud al servidor:', error);
         });
+    },
+    verificarYActualizarObjetivo: function (idInteractuable) {
+      fetch('/api/completarObjetivoPorIngrediente', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ idInteractuable })
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && Array.isArray(data.objetivos)) { // Verifica que 'objetivos' es un array
+            data.objetivos.forEach(objetivo => {
+              if (data.success && Array.isArray(data.objetivos)) { // Verifica que 'objetivos' es un array
+                data.objetivos.forEach(objetivo => {
+                  // Selecciona el elemento UI correspondiente usando el atributo data-objetivo
+                  const objUI = document.querySelector(`[data-objetivo="${objetivo.IdObj}"]`);
+                  console.log(objUI);
+                  if (objUI) {
+                    // Encuentra el elemento que sirve como icono de estado dentro del elemento del objetivo
+                    const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                    // Cambia el atributo src del icono para reflejar el estado completado
+                    iconoEstadoEl.setAttribute('src', '#tick-verde');
+                  }
+                });
+              } else {
+                console.error('Error al actualizar los objetivos:', data.message);
+              }
+            });
+          } else {
+            console.error('Error al actualizar los objetivos:', data.message);
+          }
+        })
+        .catch(error => console.error('Error al completar objetivos por ingrediente:', error));
     }
+
   });
+
+
 
   // Esperar a que la mesa se haya cargado para añadir los ingredientes
   document.querySelector('#woodenTable').addEventListener('model-loaded', agregarIngredientes);
@@ -683,9 +805,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Extrae el IdPartida de los parámetros
   const idPartida = queryParams.get('partidaId');
-
-  // Ahora que tienes el IdPartida, puedes usarlo según necesites
-  console.log(idPartida); // Solo para demostración, reemplázalo por lo que necesites hacer
+  console.log(idPartida);
 
   // Por ejemplo, cargar los objetivos para esta IdPartida
   cargarObjetivosDePartida();
@@ -699,12 +819,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         objetivos.forEach((objetivo, index) => {
           // Crea el plane para el objetivo
+          console.log(objetivo.Completado);
           const objetivoEl = document.createElement('a-plane');
           objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2 }); // Ajusta la posición según necesites
           objetivoEl.setAttribute('rotation', '0 -90 0');
           objetivoEl.setAttribute('width', '7');
           objetivoEl.setAttribute('height', '0.4');
           objetivoEl.setAttribute('color', '#FFF');
+          objetivoEl.classList.add('objetivo');  // Añade la clase 'objetivo'
+          objetivoEl.setAttribute('data-objetivo', objetivo.IdObj);
 
           // Crea el texto para el objetivo
           const textoEl = document.createElement('a-text');
@@ -718,6 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Crea el icono de estado (tick verde o X roja)
           const iconoEstadoEl = document.createElement('a-image');
+          iconoEstadoEl.className = 'icono-estado';  // Asegúrate de que esta clase se añade correctamente
           iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
           iconoEstadoEl.setAttribute('position', '2.3 0 0.1');
           iconoEstadoEl.setAttribute('height', '0.3');
@@ -732,35 +856,5 @@ document.addEventListener('DOMContentLoaded', () => {
       })
       .catch(error => console.error('Error al cargar objetivos:', error));
   }
-
-
-  function completarObjetivo(idPartida, idObj) {
-    const url = '/api/completarObjetivo'; // URL de tu endpoint
-    const data = {
-      idPartida: idPartida,
-      idObj: idObj,
-      completado: true // Asumiendo que siempre completarás el objetivo con esta función
-    };
-
-    fetch(url, {
-      method: 'POST', // o 'PUT'
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Objetivo completado:', data);
-        // Aquí puedes añadir cualquier lógica adicional que necesites ejecutar tras completar el objetivo.
-        // Por ejemplo, actualizar la interfaz de usuario para reflejar que el objetivo se ha completado.
-      })
-      .catch((error) => {
-        console.error('Error al completar el objetivo:', error);
-      });
-  }
-
-
-
 
 });
