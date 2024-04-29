@@ -26,14 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
   logoutButton.addEventListener('click', () => {
     localStorage.removeItem('usuarioAutenticado');
     window.location.href = 'index.html';
-  })
+  });
 
   function ajustarVolumen(cambio) {
     const audioEntity = document.querySelector('#audioEntity a-sound');
     let nuevoVolumen = parseFloat(audioEntity.getAttribute('volume')) + cambio;
     nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen)); // Asegurar que el volumen esté entre 0 y 1
     audioEntity.setAttribute('volume', nuevoVolumen);
-    console.log(`Volumen ajustado a ${nuevoVolumen}`);
   }
 
   botonSubirVolumen.addEventListener('click', () => ajustarVolumen(0.1));
@@ -44,8 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fireCreated) {
       fireBoxes = createFireRing(); // Actualiza la lista de cajas con las nuevas creadas
       fireCreated = true;
-      const sartenEl = document.querySelector('#fryingPan');
-      sartenEl.setAttribute('sarten', 'cooking', !sartenEl.getAttribute('sarten').cooking);
     } else {
       // Eliminar todas las cajas de fuego
       for (let box of fireBoxes) {
@@ -54,13 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
       fireBoxes = []; // Limpiar el arreglo después de eliminar las cajas
       fireCreated = false;
     }
+    const sartenEl = document.querySelector('#fryingPan');
+    sartenEl.setAttribute('sarten', 'cooking', fireCreated);
+    let sartenComponent = sartenEl.components['sarten']; // Accede al componente 'sarten'
+    if (sartenComponent) {
+      sartenComponent.tryStartCooking(); // Llama a la función tryStartCooking del componente
+    }
   });
 
   //FOGONES
   function createFireRing() {
     const numberOfBoxes = 12; // Número de cajas
     const radius = 0.2; // Radio del círculo
-    const scale = "0.05 0.05 0.05";
+    const scale = "0.05 0.02 0.05";
     let localFireBoxes = []; // Usar un arreglo local para recoger las nuevas cajas
 
     for (var i = 0; i < numberOfBoxes; i++) {
@@ -97,10 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     init: function () {
       this.fireIndicator = document.createElement('a-box');
-      this.fireIndicator.setAttribute('position', '-2.2 0.59 -3.05');
+      this.fireIndicator.setAttribute('position', '-2.2 0.54 -3.05');
       this.fireIndicator.setAttribute('rotation', '-90 0 0');
-      this.fireIndicator.setAttribute('width', '1');
-      this.fireIndicator.setAttribute('height', '1');
+      this.fireIndicator.setAttribute('width', '0.2');
+      this.fireIndicator.setAttribute('height', '0.2');
       this.fireIndicator.setAttribute('depth', '0.1');
       this.fireIndicator.setAttribute('material', 'color: blue; opacity: 0.2; transparent: true'); // Color azul con opacidad del 50%
       this.fireIndicator.setAttribute('visible', 'true'); // Inicialmente no visible
@@ -118,50 +121,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     handleCollision: function (e) {
       const collidedEl = e.detail.body.el;
-      if (collidedEl.getAttribute('data-es-tallat') === 'true' && !this.data.hasIngredient) {
-        this.data.hasIngredient = true;
+      console.log(collidedEl.getAttribute('data-es-tallat'));
+      if (collidedEl.getAttribute('data-es-tallat') === 'true' && !this.data.hasIngredient && !collidedEl.getAttribute('data-cocinado')) {
         this.ingredient = collidedEl;
-        collidedEl.setAttribute('position', '0 0.1 0');
+        this.data.hasIngredient = true;
+        collidedEl.removeAttribute('dynamic-body');
+        collidedEl.setAttribute('position', '-2.3 0.7 -3.15'); // Ajustar la posición y para que quede sobre la sartén
+        collidedEl.setAttribute('rotation', '0 0 0');
         collidedEl.setAttribute('static-body', '');
-        console.log(collidedEl.getAttribute('static-body)'));
-        collidedEl.setAttribute('data-in-cooking', true);
         this.tryStartCooking();
       }
     },
 
     checkPosition: function () {
       // Coordenadas de los fogones y tolerancia para la posición
-      const firePos = { x: -2.2, y: 0.61, z: -3.05 };
-      const tolerance = 0.5;  // Tolerancia de 50cm en todas las direcciones
+      const firePos = { x: -2.2, y: 0.54, z: -3.05 };
+      const tolerance = 0.12;  // Tolerancia de 50cm en todas las direcciones
       const sartenPos = this.el.object3D.position;
       // Verificar si la sartén está aproximadamente en la posición de los fogones
       if (Math.abs(sartenPos.x - firePos.x) <= tolerance &&
         Math.abs(sartenPos.y - firePos.y) <= tolerance &&
         Math.abs(sartenPos.z - firePos.z) <= tolerance) {
+        console.log(this.data.cooking);
         if (!this.data.cooking) { // Solo cambiar a static si previamente no estaba en la posición
+          this.el.removeAttribute('dynamic-body');
           this.el.setAttribute('static-body', ''); // Hacer la sartén estática
-          console.log("estatico");
-          this.data.cooking = true;
+          this.el.setAttribute('rotation', '0 0 0'); // Establecer la rotación a 0 0 0
           this.fireIndicator.setAttribute('visible', 'true');  // Muestra el indicador
           this.fireIndicator.setAttribute('color', 'green');  // Cambia el color a verde cuando está en posición
+        } else if (this.data.cooking) {
+          this.el.removeAttribute('static-body'); // Hacer la sartén dinámica si se mueve fuera del rango
+          this.el.setAttribute('dynamic-body', '');
+          console.log("estatico2");
+          this.data.cooking = false;
+          this.fireIndicator.setAttribute('visible', 'true');  // Muestra el indicador
+          this.fireIndicator.setAttribute('color', 'blue');  // Cambia el color a verde cuando está en posición
         }
-      } else if (this.data.cooking) {
-        this.el.removeAttribute('static-body'); // Hacer la sartén dinámica si se mueve fuera del rango
-        console.log("estatico2");
-        this.data.cooking = false;
-        this.fireIndicator.setAttribute('visible', 'true');  // Muestra el indicador
-        this.fireIndicator.setAttribute('color', 'blue');  // Cambia el color a verde cuando está en posición
+        this.tryStartCooking();
       }
     },
 
     tryStartCooking: function () {
-      if (this.data.cooking && this.data.hasIngredient) {
+      console.log("trystartCooking: " + this.data.cooking);
+      if (this.data.cooking && this.data.hasIngredient && !this.isCooking && !this.ingredient.getAttribute('data-cocinado')) {
+        console.log(this.data.cooking);
         this.startCooking();
-      }
-    },
-    tryStartCooking: function () {
-      if (this.data.cooking && this.data.hasIngredient) {
-        this.startCooking();
+        this.isCooking = true;
       }
     },
 
@@ -170,9 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
         this.progress = document.createElement('a-box');
         this.progress.setAttribute('width', '0.02');
         this.progress.setAttribute('height', '0.05');
-        this.progress.setAttribute('depth', '0.2');
+        this.progress.setAttribute('depth', '0.02');
         this.progress.setAttribute('color', 'green');
-        this.progress.setAttribute('position', '0 0.2 0');
+        this.progress.setAttribute('position', '0 0.1 0');
         this.el.appendChild(this.progress);
 
         this.updateProgress();
@@ -189,19 +194,23 @@ document.addEventListener('DOMContentLoaded', () => {
           this.el.removeChild(this.progress); // Elimina la barra de progreso
           this.progress = null;
           this.data.hasIngredient = false;
-          this.ingredient.parentNode.removeChild(this.ingredient); // Elimina el ingrediente
-          this.ingredient = null;
-          this.el.emit('cooked'); // Emite un evento indicando que la cocción ha terminado
+          let pieces = this.ingredient.querySelectorAll('[geometry]'); // Selecciona todos los hijos con geometría, asumiendo que esos son tus piezas
+          pieces.forEach((piece) => {
+            piece.setAttribute('material', 'color', 'green');
+          });
+          this.ingredient.setAttribute('data-cocinado', true);
+          this.ingredient.removeAttribute('static-body');
+          this.ingredient.setAttribute('dynamic-body', '');
+          this.isCooking = false;
+          this.cooked(); // Emite un evento indicando que la cocción ha terminado
         }
       }, 200); // Actualiza cada 200ms
+    },
+    cooked: function () {
+      console.log("cooked"); // Actualiza cada 200ms
     }
   });
 
-
-  document.querySelector('#fryingPan').addEventListener('cooked', function () {
-    console.log('El ingrediente ha sido cocinado.');
-    // Aquí puedes añadir lógica para remover el ingrediente de la sartén o cambiar su estado
-  });
 
 
   //Cargar los glb con static body
@@ -339,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
         let progressBar;
         const ingredienteGolpeado = e.detail.body.el;
         const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
-        console.log(idIngredienteGolpeado);
         if (ingredienteGolpeado.classList.contains('ingrediente')) {
           // Supongamos que cada ingrediente tiene un atributo 'data-vida'
           const listoParaCortar = ingredienteGolpeado.getAttribute('data-listo-para-cortar') === 'true';
@@ -358,19 +366,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
           }
           if (vidaActual <= 12 && vidaActual > 5) {
-            console.log("vida 12");
             progressBar.setAttribute('color', '#E58C1A');
             // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
           }
           // Aquí podrías también manejar la lógica para cuando la vida llega a 0
           if (vidaActual <= 5 && vidaActual > 0) {
-            console.log("vida 5");
             progressBar.setAttribute('color', '#FF0000');
             // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
           }
           //Cambiar de ingrediente
           if (vidaActual <= 0) {
-            console.log("vida 0");
             progressBar.remove();
             this.mostrarIngredienteCortado(ingredienteGolpeado);
           }
@@ -382,7 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Eliminar la representación actual del ingrediente no cortado
       let color = ingredienteGolpeado.getAttribute('data-color');  // Obtener el color del atributo data
       const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
-      console.log(idIngredienteGolpeado);
       ingredienteGolpeado.remove();
 
       let cortado = document.createElement('a-entity');
@@ -412,7 +416,6 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelector('a-scene').appendChild(cortado);
 
       this.ingredienteCortado(idIngredienteGolpeado);
-      console.log("Ingrediente cortado y visualizado.");
     },
 
     ingredienteCortado: function (idInteractuable) {
@@ -455,7 +458,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.objetivos.forEach(objetivo => {
                   // Selecciona el elemento UI correspondiente usando el atributo data-objetivo
                   const objUI = document.querySelector(`[data-objetivo="${objetivo.IdObj}"]`);
-                  console.log(objUI);
                   if (objUI) {
                     // Encuentra el elemento que sirve como icono de estado dentro del elemento del objetivo
                     const iconoEstadoEl = objUI.querySelector('.icono-estado');
@@ -664,7 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
           puerta.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
           rotated = false;
           sound.components.sound.playSound();
-          console.log("rotar");
         } else { // Si el plano no está rotado, lo gira 90 grados
           puerta.setAttribute('animation', 'property: rotation; to: 90 0 0; dur: 1000; easing: linear');
           puerta.setAttribute('animation__position', 'property: position; to: 0 0 1; dur: 1000; easing: linear');
@@ -819,7 +820,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         objetivos.forEach((objetivo, index) => {
           // Crea el plane para el objetivo
-          console.log(objetivo.Completado);
           const objetivoEl = document.createElement('a-plane');
           objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2 }); // Ajusta la posición según necesites
           objetivoEl.setAttribute('rotation', '0 -90 0');
