@@ -14,7 +14,8 @@
     <script src="js/app.js"></script>
     <script src="js/aframe-extras.min.js"></script>
     <script src="https://unpkg.com/super-hands/dist/super-hands.min.js"></script>
-    <script src="js/fixcamera.js"></script>
+    <!--<script src="js/fixcamera.js"></script>-->
+    <link rel="icon" href="assets/gameIcon3.ico" type="image/x-icon">
 </head>
 
 <body>
@@ -22,21 +23,27 @@
         <a-assets>
             <a-mixin id="grab" geometry="primitive: box; width: 0.1; height: 0.1; depth: 0.1" hoverable grabbable
                 stretchable draggable event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
-                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false" dynamic-body
-                shadow></a-mixin>
+                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"
+                dynamic-body="mass: 10; restitution: 0.1" shadow></a-mixin>
 
             <a-mixin id="grabContainer" hoverable grabbable stretchable draggable
                 event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
                 event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false" dynamic-body
                 shadow></a-mixin>
 
-            <a-mixin id="grabLarge" geometry="primitive: box; width: 0.4; height: 0.05; depth: 0.1" hoverable grabbable
+            <a-mixin id="grabLarge" geometry="primitive: box; width: 0.3; height: 0.05; depth: 0.1" hoverable grabbable
                 stretchable draggable event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
-                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false" dynamic-body
-                shadow></a-mixin>
+                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"
+                dynamic-body="mass: 10; restitution: 0.1" shadow></a-mixin>
 
             <a-mixin id="grabSarten" geometry="primitive: box; width: 0.8; height: 0.1; depth: 0.5" hoverable grabbable
                 stretchable draggable event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
+                event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false"
+                dynamic-body="mass: 15; restitution: 0.05" shadow></a-mixin>
+
+            <a-mixin id="grabBandeja" geometry="primitive: box; width: 0.4; height: 0.01; depth: 0.25" hoverable
+                grabbable stretchable draggable
+                event-set__hoveron="_event: hover-start; material.opacity: 0.7; transparent: true"
                 event-set__hoveroff="_event: hover-end; material.opacity: 1; transparent: false" dynamic-body
                 shadow></a-mixin>
             <!-- <a-mixin id="grab" geometry="primitive: box; width: 0.5; height: 0.5; depth: 0.5" hoverable grabbable
@@ -93,11 +100,12 @@
             <img id="textura-madera" src="assets/madera.jpg">
         </a-assets>
 
-        <a-sky id="image-360" src="#city"
-            animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
-            animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
+        <a-entity id="escenaJuego">
+            <a-sky id="image-360" src="#city"
+                animation__fade="property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade"
+                animation__fadeback="property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade"></a-sky>
 
-        <!-- <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
+            <!-- <a-entity id="rig" movement-controls position="0 0.6 0" play-on-wasd>
             <a-camera position="0 0 0" wasd-controls="fly: false; acceleration: 10" look-controls
                 raycaster="objects: .colisionable">
                 <a-cursor id="cursor"
@@ -110,224 +118,259 @@
                 volume="0.3"></a-sound>
         </a-entity> -->
 
-        <a-entity id="rig" movement-controls="speed: 0.1">
-            <a-entity fixcamera>
-                <a-entity camera wasd-controls="acceleration: 10" position="0 1.6 0" capture-mouse
-                    raycaster="objects: .grab" cursor="rayOrigin:mouse" static-body="shape: sphere; sphereRadius: 0.001"
-                    super-hands="colliderEvent: raycaster-intersection;
+            <a-entity id="rig" movement-controls="speed: 0.1">
+                <a-entity fixcamera>
+                    <a-entity camera wasd-controls="acceleration: 10" position="0 1.6 0" capture-mouse
+                        raycaster="objects: .grab" cursor="rayOrigin:mouse"
+                        static-body="shape: sphere; sphereRadius: 0.001" super-hands="colliderEvent: raycaster-intersection;
                              colliderEventProperty: els;
                              colliderEndEvent:raycaster-intersection-cleared;
                              colliderEndEventProperty: clearedEls;">
 
+                    </a-entity>
+                    <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
+                    </a-entity>
+                    <a-entity id="lhand" laser-controls="hand: left" raycaster="objects: .clickable; far: 10"
+                        line="color: red; opacity: 0.5">
+                    </a-entity>
                 </a-entity>
-                <a-entity id="rhand" mixin="physics-hands" hand-controls="hand: right">
-                </a-entity>
-                <a-entity id="lhand" laser-controls="hand: left" raycaster="objects: .clickable; far: 10"
-                    line="color: red; opacity: 0.5">
-                </a-entity>
+                <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
+                    volume="0.3"></a-sound>
             </a-entity>
-            <a-sound id="footsteps" src="assets/sounds/pasos.mp3" preload="auto" loop="true" poolSize="4"
-                volume="0.3"></a-sound>
-        </a-entity>
 
-        <script>
-            // turn controller's physics presence on only while button held down
-            AFRAME.registerComponent('phase-shift', {
-                init: function () {
-                    var el = this.el
-                    el.addEventListener('gripdown', function () {
-                        el.setAttribute('collision-filter', { collisionForces: true })
-                    })
-                    el.addEventListener('gripup', function () {
-                        el.setAttribute('collision-filter', { collisionForces: false })
-                    })
-                }
-            })
-        </script>
+            <script>
+                // turn controller's physics presence on only while button held down
+                AFRAME.registerComponent('phase-shift', {
+                    init: function () {
+                        var el = this.el
+                        el.addEventListener('gripdown', function () {
+                            el.setAttribute('collision-filter', { collisionForces: true })
+                        })
+                        el.addEventListener('gripup', function () {
+                            el.setAttribute('collision-filter', { collisionForces: false })
+                        })
+                    }
+                })
+            </script>
 
-        <!-- LUCES -->
-        <a-light type="ambient" color="#ffffff"></a-light>
-        <a-light type="directional" color="#ffffff" intensity="0.4" position="0 4 -3"></a-light>
+            <!-- LUCES -->
+            <a-light type="ambient" color="#ffffff"></a-light>
+            <a-light type="directional" color="#ffffff" intensity="0.4" position="0 4 -3"></a-light>
 
-        <!-- Suelo y techo a-->
-        <a-entity id="floor" geometry="primitive: plane; width: 30; height: 30"
-            material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 -0.5 0"
-            rotation="-90 0 0" depth="0.2" static-body></a-entity>
-        <a-entity id="roof" geometry="primitive: plane; width: 30; height: 30"
-            material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 9 0"
-            rotation="90 0 0" depth="0.2" static-body></a-entity>
+            <!-- Suelo y techo a-->
+            <a-entity id="floor" geometry="primitive: plane; width: 30; height: 30"
+                material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 -0.5 0"
+                rotation="-90 0 0" depth="0.2" static-body></a-entity>
+            <a-entity id="roof" geometry="primitive: plane; width: 30; height: 30"
+                material="src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1;" position="0 9 0"
+                rotation="90 0 0" depth="0.2" static-body></a-entity>
 
-        <!-- Objectes -->
+            <!-- Objectes -->
 
-        <a-entity class="grab" mixin="grab" position="-1 1 -3" material="color: red" reset="resetPosition: -1 2 -3"
-            colocado-en-tabla></a-entity>
+            <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0"
+                scale="0.2 0.2 0.2" vibrate-on-click progress-bar class="clickable"></a-entity>
 
-        <a-entity id="shaker" gltf-model="url(assets/batidora.glb)" position="2.5 0.65 -2.6" rotation="0 -90 0"
-            scale="0.2 0.2 0.2" vibrate-on-click progress-bar class="clickable"></a-entity>
+            <a-entity id="fireSource" gltf-model="url(assets/fogons.glb)" position="-2.2 0.55 -3" rotation="0 0 0"
+                scale="0.065 0.065 0.065" class="clickable"></a-entity>
 
-        <a-entity id="fireSource" gltf-model="url(assets/fogons.glb)" position="-2.2 0.55 -3" rotation="0 0 0"
-            scale="0.065 0.065 0.065" class="clickable"></a-entity>
+            <a-entity
+                text="value: Coloca la sarten y enciende los fogones con click izquierdo para cocinar un ingrediente cortado; color: white; align: center; width: 2.5;"
+                position="-2.2 1.6 -3.3" rotation="0 0 0"></a-entity>
 
-        <a-entity id="woodenTable" gltf-model="url(assets/wooden_table.glb)" position="7 0 -3"
-            rotation="0 70 0"></a-entity>
+            <a-entity id="woodenTable" gltf-model="url(assets/wooden_table.glb)" position="7 0 -3"
+                rotation="0 70 0"></a-entity>
 
-        <a-entity id="fryingPan" mixin="grabSarten" class="grab" gltf-model="url(assets/frying_pan_scaleZ.glb)"
-            position="3 1.2 -3" rotation="0 0 0" reset="resetPosition: 3 1.2 -3" sarten>
-        </a-entity>
+            <a-entity text="value: Coge los ingredientes; color: white; align: center; width: 6;" position="7 3 -3"
+                rotation="0 -20 0"></a-entity>
 
-        <a-entity id="kitchenKnife" mixin="grabLarge" class="grab" gltf-model="url(assets/kitchen_knife.glb)"
-            position="1 1.5 -3" rotation="0 0 0" scale="1.2 1.2 1.2" reset="resetPosition: 0 1.2 -3" detectar-golpe>
-        </a-entity>
+            <a-entity geometry="primitive: box; width:1.03; height: 0.33; depth: 0.1" material="color: white"
+                position="-2.175 2.2 -3.71"></a-entity>
+            <!--Cronometro-->
+            <a-entity geometry="primitive: box; width:1; height: 0.3; depth: 0.1" material="color: black"
+                position="-2.175 2.2 -3.7"></a-entity>
 
-        <a-plane id="tabla" position="1 0.52 -3" rotation="-90 0 0" width="1.5" height="0.5" color="#562701"
-            src="assets/madera.jpg" static-body></a-plane>
+            <a-entity id="timer" text="value: 5:00; color: white; align: center; width: 3;"
+                position="-2.175 2.2 -3.65"></a-entity>
 
-        <a-entity text="value: Coge los ingredientes; color: white; align: center; width: 6;" position="7 3 -3"
-            rotation="0 -20 0"></a-entity>
+            <a-entity id="fryingPan" mixin="grabSarten" class="grab" gltf-model="url(assets/frying_pan_scaleZ.glb)"
+                position="3.1 1.2 -3" rotation="0 0 0" reset="resetPosition: 3.1 1.2 -3" sarten>
+            </a-entity>
 
-        <!-- Paredes -->
-        <a-box position="0 4 -15" width="30" height="10" depth="1" color="gray" static-body></a-box>
-        <!-- Pared detras -->
-        <a-box class="colisionable" position="0 4 15" width="30" height="10" depth="1" color="gray" static-body></a-box>
-        <!-- Pared delante -->
-        <a-box position="-15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
-            static-body></a-box> <!-- Pared izq ventana-->
-        <a-box position="-15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared izq -->
-        <a-box position="-15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box>
-        <!-- Pared izq -->
-        <a-box position="15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
-            static-body></a-box> <!-- Pared der -->
-        <a-box position="15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared der -->
-        <a-box position="15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box> <!-- Pared der -->
+            <a-entity id="kitchenKnife" mixin="grabLarge" class="grab" gltf-model="url(assets/kitchen_knife.glb)"
+                position="-4.3 1.5 -3" rotation="0 0 0" scale="1.2 1.2 1.2" reset="resetPosition: -4.3 1.2 -3"
+                detectar-golpe>
+            </a-entity>
 
-        <!-- Encimera -->
-        <a-box position="0 0 -3" depth="1.5" height="1" width="8"
-            material="src: url(assets/images/granite.jpg); repeat: 4 2; metalness: 0.5" color="#FFF" static-body>
-        </a-box> <!-- Lateral izquierdo -->
-        <a-box position="-4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c" static-body></a-box>
-        <!-- Lateral derecho -->
-        <a-box position="4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c" static-body></a-box>
-        <!-- Trasera -->
-        <a-box position="0 2 -3.85" width="8.4" height="4" depth="0.2" color="#d2b48c" static-body></a-box>
+            <a-entity id="bandeja" gltf-model="url(assets/bandeja.glb)" position="-5.5 0.57 -2.8" rotation="0 0 0"
+                scale="2.5 2.5 2.5" bandeja-checker="tolerance: 0.1">
+            </a-entity>
 
-        <a-box position="1 3 -3.7" width="2.5" height="0.2" depth="0.1" color="grey" static-body></a-box>
+            <a-entity
+                text="value: Coloca los ingredientes cocinados en la bandeja para emplatar; color: white; align: center; width: 2;"
+                position="-5.5 2 -3.3" rotation="0 0 0"></a-entity>
 
-        <!-- Armario -->
-        <a-entity id="armario" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta class="clickable">
-            <!-- Partes de la nevera -->
-            <a-box id="arriba" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 1 0.5"
-                rotation="0 0 0"></a-box>
-            <a-box id="detras" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 0"
-                rotation="90 0 0"></a-box>
-            <a-box id="bajo" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 -1 0.5"
-                rotation="0 0 0"></a-box>
-            <a-box class="puerta" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 1"
-                rotation="90 0 0">
-                <!-- Pomo -->
-                <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="white" position="0.7 0.1 -0.3"
+            <a-entity id="bol" mixin="grab" class="grab" gltf-model="url(assets/bowl.glb)" position="1.9 1.4 -2.7"
+                rotation="0 0 0" bandeja-checker="tolerance: 0.1" reset="resetPosition: 1.9 1.4 -2.7">
+            </a-entity>
+
+            <a-plane id="tabla" position="1 0.52 -3" rotation="-90 0 0" width="1.5" height="0.5" depth="0.01"
+                color="#562701" src="assets/madera.jpg" static-body></a-plane>
+
+            <a-entity
+                text="value: Coloca un ingrediente en la tabla y golpealo con el cuchillo para cortarlo; color: white; align: center; width: 2;"
+                position="1 1.6 -3.3" rotation="0 0 0"></a-entity>
+            <!-- Paredes -->
+            <a-box position="0 4 -15" width="30" height="10" depth="1" color="gray" static-body></a-box>
+            <!-- Pared detras -->
+            <a-box class="colisionable" position="0 4 15" width="30" height="10" depth="1" color="gray"
+                static-body></a-box>
+            <!-- Pared delante -->
+            <a-box position="-15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
+                static-body></a-box> <!-- Pared izq ventana-->
+            <a-box position="-15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box>
+            <!-- Pared izq -->
+            <a-box position="-15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box>
+            <!-- Pared izq -->
+            <a-box position="15 4 0" width="1" height="10" depth="10" color="gray" transparent="true" opacity="0.5"
+                static-body></a-box> <!-- Pared der -->
+            <a-box position="15 4 10" width="1" height="10" depth="10" color="gray" static-body></a-box>
+            <!-- Pared der -->
+            <a-box position="15 4 -10" width="1" height="10" depth="10" color="gray" static-body></a-box>
+            <!-- Pared der -->
+
+            <!-- Encimera -->
+            <a-box position="0 0 -3" depth="1.5" height="1" width="8"
+                material="src: url(assets/images/granite.jpg); repeat: 4 2; metalness: 0.5" color="#FFF" static-body>
+            </a-box> <!-- Lateral izquierdo -->
+            <a-box position="-4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c" static-body></a-box>
+            <!-- Lateral derecho -->
+            <a-box position="4.1 0.25 -3" width="0.2" height="0.5" depth="1.5" color="#d2b48c" static-body></a-box>
+            <!-- Trasera -->
+            <a-box position="0 2 -3.85" width="8.4" height="4" depth="0.2" color="#d2b48c" static-body></a-box>
+
+            <a-box position="-2.175 3 -3.1" width="2.5" height="0.2" depth="1.5" color="grey" static-body></a-box>
+
+            <!-- Armario -->
+            <a-entity id="armario" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta class="clickable">
+                <!-- Partes de la nevera -->
+                <a-box id="arriba" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 1 0.5"
+                    rotation="0 0 0"></a-box>
+                <a-box id="detras" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 0"
                     rotation="90 0 0"></a-box>
-            </a-box>
-            <a-box id="der" width="1" height="2" depth="0.1" color="white" position="1 0 0.5" rotation="0 90 0"></a-box>
-            <a-box id="izq" width="1" height="2" depth="0.1" color="white" position="-1 0 0.5"
-                rotation="0 -90 0"></a-box>
-        </a-entity>
+                <a-box id="bajo" width="2" height="0.1" depth="1" src="assets/madera.jpg" position="0 -1 0.5"
+                    rotation="0 0 0"></a-box>
+                <a-box class="puerta" width="2" height="0.1" depth="2" src="assets/madera.jpg" position="0 0 1"
+                    rotation="90 0 0">
+                    <!-- Pomo -->
+                    <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="white" position="0.7 0.1 -0.3"
+                        rotation="90 0 0"></a-box>
+                </a-box>
+                <a-box id="der" width="1" height="2" depth="0.1" color="white" position="1 0 0.5"
+                    rotation="0 90 0"></a-box>
+                <a-box id="izq" width="1" height="2" depth="0.1" color="white" position="-1 0 0.5"
+                    rotation="0 -90 0"></a-box>
+            </a-entity>
 
-        <!-- Horno -->
-        <a-entity id="horno" position="-7.5 0.2 -3" scale="0.7 0.7 0.7" puerta-horno class="clickable">
-            <a-entity progress-bar position="0 0 0" rotation="0 45 0"></a-entity>
-            <!-- Partes de la nevera -->
-            <a-box id="arribaHorno" width="2" height="0.1" depth="1" color="black" position="0 1 0.5"
-                rotation="0 0 0"></a-box>
-            <a-box id="detrasHorno" width="2" height="0.1" depth="2" color="black" position="0 0 0"
-                rotation="90 0 0"></a-box>
-            <a-box id="bajoHorno" width="2" height="0.1" depth="1" color="black" position="0 -1 0.5"
-                rotation="0 0 0"></a-box>
-            <a-box id="puertaHorno" class="puerta-horno" width="2" height="0.1" depth="2" color="grey"
-                transparent="true" position="0 0 1" opacity="0.5" rotation="90 0 0"
-                aabb-collider="objects: .collidable; interval: 1000">
-                <!-- Pomo -->
+            <!-- Horno -->
+            <a-entity id="horno" position="-7.5 0.2 -3" scale="0.7 0.7 0.7" puerta-horno class="clickable">
+                <a-entity progress-bar position="0 0 0" rotation="0 45 0"></a-entity>
+                <!-- Partes de la nevera -->
+                <a-box id="arribaHorno" width="2" height="0.1" depth="1" color="black" position="0 1 0.5"
+                    rotation="0 0 0"></a-box>
+                <a-box id="detrasHorno" width="2" height="0.1" depth="2" color="black" position="0 0 0"
+                    rotation="90 0 0"></a-box>
+                <a-box id="bajoHorno" width="2" height="0.1" depth="1" color="black" position="0 -1 0.5"
+                    rotation="0 0 0"></a-box>
+                <a-box id="puertaHorno" class="puerta-horno" width="2" height="0.1" depth="2" color="grey"
+                    transparent="true" position="0 0 1" opacity="0.5" rotation="90 0 0"
+                    aabb-collider="objects: .collidable; interval: 1000">
+                    <!-- Pomo -->
 
-            </a-box>
-            <a-box id="derHorno" width="1" height="2" depth="0.1" color="black" position="1 0 0.5"
-                rotation="0 90 0"></a-box>
-            <a-box id="izqHorno" width="1" height="2" depth="0.1" color="black" position="-1 0 0.5"
-                rotation="0 -90 0"></a-box>
-        </a-entity>
+                </a-box>
+                <a-box id="derHorno" width="1" height="2" depth="0.1" color="black" position="1 0 0.5"
+                    rotation="0 90 0"></a-box>
+                <a-box id="izqHorno" width="1" height="2" depth="0.1" color="black" position="-1 0 0.5"
+                    rotation="0 -90 0"></a-box>
+            </a-entity>
 
-        <!-- Nevera -->
+            <a-box position="-5.2 0 -3" width="2.1" height="1" depth="1.5" color="#d2b48c" static-body></a-box>
+            <!-- 
         <a-entity id="nevera" position="-5.2 0.2 -3" scale="0.7 0.7 0.7" puerta class="clickable">
-            <!-- Partes de la nevera -->
             <a-box id="arriba" width="2" height="0.1" depth="2" color="#FFF" position="0 1 0" rotation="0 0 0"></a-box>
             <a-box id="detras" width="2" height="0.1" depth="2" color="#FFF" position="0 0 -1"
                 rotation="90 0 0"></a-box>
             <a-box id="bajo" width="2" height="0.1" depth="2" color="#FFF" position="0 -1 0" rotation="0 0 0"></a-box>
             <a-box class="puerta" width="2" height="0.1" depth="2" color="#FFF" position="0 0 1" rotation="90 0 0">
-                <!-- Pomo -->
                 <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="black" position="0.7 0.2 -0.3"
                     rotation="90 0 0"></a-box>
             </a-box>
             <a-box id="der" width="2" height="2" depth="0.1" color="#FFF" position="1 0 0" rotation="0 90 0"></a-box>
             <a-box id="izq" width="2" height="2" depth="0.1" color="#FFF" position="-1 0 0" rotation="0 -90 0"></a-box>
+        </a-entity>-->
+
+            <!-- Cambio de fondo -->
+            <a-entity position="-14.4 1 9" rotation="0 90 0">
+                <a-entity text="value: Cambiar el fondo; color: white; align: center; width: 8;"
+                    position="0 2 0"></a-entity>
+                <!-- Enlace 1 -->
+                <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
+                    material="shader: flat; src: #city" sound="src:#sound; on:click; poolSize: 4"
+                    event-set__mouseenter="scale: 1.2 1.2 1" event-set__mouseleave="scale: 1 1 1"
+                    event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="-2 0 0">
+                </a-entity>
+
+                <!-- Enlace 2 -->
+                <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
+                    material="shader: flat; src: #sechelt" event-set__mouseenter="scale: 1.2 1.2 1"
+                    event-set__mouseleave="scale: 1 1 1"
+                    event-set__click="_target: #image-360; _delay: 300; material.src: #sechelt" position="-0.5 0 0"
+                    sound="src:#house; on:click; poolSize: 4">
+                </a-entity>
+
+                <!-- Enlace 3 -->
+                <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
+                    material="shader: flat; src: #cubes" event-set__mouseenter="scale: 1.2 1.2 1"
+                    event-set__mouseleave="scale: 1 1 1"
+                    event-set__click="_target: #image-360; _delay: 300; material.src: #cubes" position="1 0 0">
+                </a-entity>
+
+                <!-- Enlace 4 -->
+                <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
+                    material="shader: flat; src: #city" sound="on: click; src: #sound"
+                    event-set__mouseenter="scale: 1.2 1.2 1" event-set__mouseleave="scale: 1 1 1"
+                    event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="2.5 0 0">
+                </a-entity>
+
+                <a-entity id="menuOpciones" position="-4 0.5 0" rotation="0 0 0" class="clickable">
+                    <a-plane id="menuOpcionesButton" position="0 0 0" material="color: #0C9" width="2" height="0.5">
+                        <a-text value="Opciones" align="center"></a-text>
+                    </a-plane>
+                </a-entity>
+
+                <!-- Menú de opciones abierto, inicialmente no visible -->
+                <a-entity id="menuOpcionesOpen" position="-2 1.5 0.8" rotation="0 0 0" visible="false"
+                    class="clickable">
+                    <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
+                        <a-text value="Volumen" align="center"></a-text>
+                    </a-plane>
+                    <a-plane id="retrocesoButton" position="0 -0.5 0" material="color: #0C9" width="2" height="0.3">
+                        <a-text value="Volver" align="center"></a-text>
+                    </a-plane>
+                    <!-- Botones para ajustar el volumen -->
+                    <a-plane id="botonSubirVolumen" position="0.5 0 0" material="color: #0C9" width="0.75" height="0.2">
+                        <a-text value="+" align="center"></a-text>
+                    </a-plane>
+                    <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75"
+                        height="0.2">
+                        <a-text value="-" align="center"></a-text>
+                    </a-plane>
+                    <a-plane id="botonSalir" position="0 -1 0" material="color: #F00" width="2" height="0.2">
+                        <a-text value="Salir del juego" align="center"></a-text>
+                    </a-plane>
+                </a-entity>
+            </a-entity>
         </a-entity>
 
-        <!-- Cambio de fondo -->
-        <a-entity position="-14.4 1 9" rotation="0 90 0">
-            <a-entity text="value: Cambiar el fondo; color: white; align: center; width: 8;"
-                position="0 2 0"></a-entity>
-            <!-- Enlace 1 -->
-            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #city"
-                sound="src:#sound; on:click; poolSize: 4" event-set__mouseenter="scale: 1.2 1.2 1"
-                event-set__mouseleave="scale: 1 1 1"
-                event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="-2 0 0">
-            </a-entity>
-
-            <!-- Enlace 2 -->
-            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1"
-                material="shader: flat; src: #sechelt" event-set__mouseenter="scale: 1.2 1.2 1"
-                event-set__mouseleave="scale: 1 1 1"
-                event-set__click="_target: #image-360; _delay: 300; material.src: #sechelt" position="-0.5 0 0"
-                sound="src:#house; on:click; poolSize: 4">
-            </a-entity>
-
-            <!-- Enlace 3 -->
-            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #cubes"
-                event-set__mouseenter="scale: 1.2 1.2 1" event-set__mouseleave="scale: 1 1 1"
-                event-set__click="_target: #image-360; _delay: 300; material.src: #cubes" position="1 0 0">
-            </a-entity>
-
-            <!-- Enlace 4 -->
-            <a-entity class="link" geometry="primitive: plane; height: 1; width: 1" material="shader: flat; src: #city"
-                sound="on: click; src: #sound" event-set__mouseenter="scale: 1.2 1.2 1"
-                event-set__mouseleave="scale: 1 1 1"
-                event-set__click="_target: #image-360; _delay: 300; material.src: #city" position="2.5 0 0">
-            </a-entity>
-
-            <a-entity id="menuOpciones" position="-4 0.5 0" rotation="0 0 0" class="clickable">
-                <a-plane id="menuOpcionesButton" position="0 0 0" material="color: #0C9" width="2" height="0.5">
-                    <a-text value="Opciones" align="center"></a-text>
-                </a-plane>
-            </a-entity>
-
-            <!-- Menú de opciones abierto, inicialmente no visible -->
-            <a-entity id="menuOpcionesOpen" position="-2 1.5 0.8" rotation="0 0 0" visible="false" class="clickable">
-                <a-plane id="volumenControl" position="0 0.5 0" material="color: #F00" width="2" height="0.5">
-                    <a-text value="Volumen" align="center"></a-text>
-                </a-plane>
-                <a-plane id="retrocesoButton" position="0 -0.5 0" material="color: #0C9" width="2" height="0.3">
-                    <a-text value="Volver" align="center"></a-text>
-                </a-plane>
-                <!-- Botones para ajustar el volumen -->
-                <a-plane id="botonSubirVolumen" position="0.5 0 0" material="color: #0C9" width="0.75" height="0.2">
-                    <a-text value="+" align="center"></a-text>
-                </a-plane>
-                <a-plane id="botonBajarVolumen" position="-0.5 0 0" material="color: #F00" width="0.75" height="0.2">
-                    <a-text value="-" align="center"></a-text>
-                </a-plane>
-                <a-plane id="botonSalir" position="0 -1 0" material="color: #F00" width="2" height="0.2">
-                    <a-text value="Salir del juego" align="center"></a-text>
-                </a-plane>
-            </a-entity>
-        </a-entity>
     </a-scene>
 </body>
 
