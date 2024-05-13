@@ -28,7 +28,7 @@ AFRAME.registerComponent('fixcamera', {
     }
   },
   onEnterVR: function () {
-    this.el.setAttribute('position', '0 -1.30 0');
+    this.el.setAttribute('position', '0 -0.9 0');
   },
   onExitVR: function () {
     this.el.setAttribute('position', '0 0 0');

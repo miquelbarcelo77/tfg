@@ -83,6 +83,32 @@ function cargarNuevoNivel(escena) {
     endScreen.setAttribute('height', '2');
     endScreen.setAttribute('color', '#FFFFFF');
 
+    // Crear el fondo del botón
+    let buttonBackground = document.createElement('a-plane');
+    buttonBackground.setAttribute('color', '#CCCCCC');
+    buttonBackground.setAttribute('height', '0.4');
+    buttonBackground.setAttribute('width', '2');
+    buttonBackground.setAttribute('position', '0 -0.5 0.05');
+    buttonBackground.classList.add('clickable'); // Hacerlo clickeable
+
+    // Crear el texto del botón
+    let buttonText = document.createElement('a-text');
+    buttonText.setAttribute('value', 'Regresar a Inicio');
+    buttonText.setAttribute('align', 'center');
+    buttonText.setAttribute('color', '#000000');
+    buttonText.setAttribute('position', '0 0 0.1'); // Ligeramente por delante del fondo para evitar z-fighting
+
+    // Añadir evento de clic al fondo del botón
+    buttonBackground.addEventListener('click', function () {
+        window.location.href = 'index.html';
+    });
+
+    // Añadir el texto al fondo del botón
+    buttonBackground.appendChild(buttonText);
+
+    // Añadir el botón al endScreen
+    endScreen.appendChild(buttonBackground);
+
     // Crear el texto para la pantalla de finalización
     let text = document.createElement('a-text');
     text.setAttribute('value', 'Partida Finalizada - Tumbet realizado');
@@ -117,7 +143,7 @@ function cargarNuevoNivel(escena) {
     floor.setAttribute('geometry', 'primitive: plane; width: 30; height: 30');
     floor.setAttribute('material', 'src: #textura-madera; repeat: 10 10; metalness: 0.5; roughness: 1');
     floor.setAttribute('position', '0 -0.5 0');
-    floor.setAttribute('rotation', '-90 0 0');
+    floor.setAttribute('rotation', '-90 -0.5 0');
     floor.setAttribute('depth', '0.2');
     floor.setAttribute('static-body', '');
     escena.appendChild(floor);
@@ -200,7 +226,6 @@ function cargarNuevoNivel(escena) {
     interactionTextTabla.setAttribute('rotation', '0 0 0');
     escena.appendChild(interactionTextTabla);
 
-    // Configurar paredes y encimera para definir el área de juego
     const walls = [
         { pos: '0 4 -15', size: '30 10 1', color: 'gray' },  // Pared detrás
         { pos: '0 4 15', size: '30 10 1', color: 'gray' },   // Pared delante
@@ -790,50 +815,40 @@ function iniciarFuncionesJuego() {
                     bowl.removeObject3D('semicircle');
                 }
                 bowl.removeAttribute('tomate-salsa');
-                this.showEndScreen();
+                setTimeout(() => {
+                    this.showEndScreen();
+                }, 3000); 
             }
         },
-        showEndScreen: function() {
+        showEndScreen: function () {
             let endScreen = document.getElementById('endScreen');
             endScreen.setAttribute('visible', 'true');  // Hacer visible la pantalla de finalización
-        
+
             let cameraRig = document.getElementById('rig');
             let screenPosition = endScreen.getAttribute('position');
-        
+
             // Calcular la nueva posición delante del endScreen
             let newPosition = {
                 x: screenPosition.x,
                 y: screenPosition.y,
                 z: screenPosition.z + 2 // Ajusta según sea necesario para posicionar la cámara adecuadamente
             };
-        
-            // Añadir animación de posición
-            cameraRig.setAttribute('animation__pos', {
-                property: 'position',
-                to: `${newPosition.x} ${newPosition.y} ${newPosition.z}`,
-                dur: 2000,  // Duración de 2000 ms (2 segundos)
-                easing: 'easeInOutQuad'
-            });
-        
-            // Añadir animación de rotación si es necesario
-            cameraRig.setAttribute('animation__rot', {
-                property: 'rotation',
-                to: '0 0 0',  // Asegúrate de que la rotación final sea correcta
-                dur: 2000,
-                easing: 'easeInOutQuad'
-            });
-        
+
+            // Establecer directamente la nueva posición y rotación de la cámara
+            cameraRig.setAttribute('position', `${newPosition.x} ${newPosition.y} ${newPosition.z}`);
+            cameraRig.setAttribute('rotation', '0 0 0');  // Asegúrate de que la rotación final sea correcta
+
             // Opcional: Desactivar los controles de movimiento y WASD
             this.disableControls();
-        
+
             // Deshabilitar clic o cualquier otra interacción posible
             this.disableInteractions();
-        
+
             // Detener cualquier sonido de pasos que podría estar jugando
             this.stopFootsteps();
         },
-        
-        disableControls: function() {
+
+        disableControls: function () {
             let cameraRig = document.getElementById('rig');
             if (cameraRig.components['movement-controls']) {
                 cameraRig.components['movement-controls'].data.enabled = false;
@@ -843,20 +858,20 @@ function iniciarFuncionesJuego() {
                 camera.components['wasd-controls'].pause();
             }
         },
-        
-        disableInteractions: function() {
-            document.querySelectorAll('.clickable').forEach(function(clickable) {
+
+        disableInteractions: function () {
+            document.querySelectorAll('.clickable').forEach(function (clickable) {
                 clickable.classList.remove('clickable');
             });
         },
-        
-        stopFootsteps: function() {
+
+        stopFootsteps: function () {
             let footsteps = document.getElementById('footsteps');
             if (footsteps.components.sound) {
                 footsteps.components.sound.stopSound();
             }
         },
-             
+
         checkPosition: function (collidedPos, indicatorPos) {
             return Math.abs(collidedPos.x - indicatorPos.x) <= this.data.tolerance &&
                 Math.abs(collidedPos.y - indicatorPos.y) <= this.data.tolerance &&

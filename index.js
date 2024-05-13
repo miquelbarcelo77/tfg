@@ -1,13 +1,22 @@
 const express = require('express');
 var session = require('express-session')
 const http = require('http');
+const https = require ('https');
+var fs = require('fs');
 const socketIo = require('socket.io');
 const mysql = require('mysql');
 const { v4: uuidv4 } = require('uuid'); //Per les cookies
 
 const app = express();
 const server = http.createServer(app);
+const serverhttps = https.createServer(app);
 const io = socketIo(server);
+
+var options = {
+  key: fs.readFileSync('key.pem'),
+  cert: fs.readFileSync('cert.pem')
+};
+
 
 // BBDD
 const connection = mysql.createConnection({
@@ -387,7 +396,9 @@ io.on('connection', (socket) => {
 });
 
 // Iniciar el servidor en el puerto 80
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
+const PORT = process.env.PORT || 80;
+server.listen(PORT, "0.0.0.0", () => {
   console.log(`Servidor Express y Socket.IO en funcionamiento en el puerto ${PORT}`);
 });
+
+https.createServer(options, app).listen(443);
