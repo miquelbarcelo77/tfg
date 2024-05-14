@@ -6,12 +6,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const botonSubirVolumen = document.querySelector('#botonSubirVolumen');
     const botonBajarVolumen = document.querySelector('#botonBajarVolumen');
     const logoutButton = document.querySelector('#botonSalir');
+
     // Espera a que se cargue la escena
     document.querySelector('a-scene').addEventListener('loaded', function () {
         var botonTumbet = document.querySelector('#botonTumbet');
         // Obtiene referencia al botón de Tortilla
         var botonCocaDeTrampo = document.querySelector('#botonCocaDeTrampo');
-
         // Cuando se haga clic en el botón de Tumbet
         botonTumbet.addEventListener('click', function () {
             // Redirige a la página de inicio.html al hacer clic en el botón de Tumbet
@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-function cambiarEscena() {
+function cambiarEscena(nombreNivel) {
     const escenaJuego = document.getElementById('escenaJuego');
 
     // Limpiar todo el contenido actual de escenaJuego
@@ -60,10 +60,10 @@ function cambiarEscena() {
     }
 
     // Aquí añades el contenido nuevo, por ejemplo, cargando una nueva configuración de entidad para el nivel
-    cargarNuevoNivel(escenaJuego);
+    cargarNuevoNivel(escenaJuego, nombreNivel);
 }
 
-function cargarNuevoNivel(escena) {
+function cargarNuevoNivel(escena, nombreNivel) {
     // Puedes definir esta función para cargar diferentes niveles o escenas
     // Ejemplo simple añadiendo un nuevo sky y algunos objetos
     // Crear y configurar el sky
@@ -264,10 +264,10 @@ function cargarNuevoNivel(escena) {
     kitchenKnife.setAttribute('mixin', 'grabLarge');
     kitchenKnife.setAttribute('class', 'grab');
     kitchenKnife.setAttribute('gltf-model', 'url(assets/kitchen_knife.glb)');
-    kitchenKnife.setAttribute('position', '-4.3 1.5 -3');
+    kitchenKnife.setAttribute('position', '2 1.5 -3');
     kitchenKnife.setAttribute('rotation', '0 0 0');
     kitchenKnife.setAttribute('scale', '1.2 1.2 1.2');
-    kitchenKnife.setAttribute('reset', 'resetPosition: -4.3 1.2 -3');
+    kitchenKnife.setAttribute('reset', 'resetPosition: 2 1.2 -3');
     kitchenKnife.setAttribute('detectar-golpe', '');
     escena.appendChild(kitchenKnife);
 
@@ -399,31 +399,51 @@ function cargarNuevoNivel(escena) {
     escena.appendChild(upperShelf);
 
     // Añadir la bandeja para emplatar con detector de colisiones
-    const bandeja = document.createElement('a-entity');
-    bandeja.setAttribute('id', 'bandeja');
-    bandeja.setAttribute('gltf-model', 'url(assets/bandeja.glb)');
-    bandeja.setAttribute('position', '-5.5 0.57 -2.8');
-    bandeja.setAttribute('rotation', '0 0 0');
-    bandeja.setAttribute('scale', '2.5 2.5 2.5');
-    bandeja.setAttribute('bandeja-checker', 'tolerance: 0.2');
-    escena.appendChild(bandeja);
+    if (nombreNivel === 'Tumbet') {
+        const bandeja = document.createElement('a-entity');
+        bandeja.setAttribute('id', 'bandeja');
+        bandeja.setAttribute('gltf-model', 'url(assets/bandeja.glb)');
+        bandeja.setAttribute('position', '-5.5 0.57 -2.8');
+        bandeja.setAttribute('rotation', '0 0 0');
+        bandeja.setAttribute('scale', '2.5 2.5 2.5');
+        bandeja.setAttribute('bandeja-checker', 'tolerance: 0.2');
+        escena.appendChild(bandeja);
+
+        // Añadir el bol con posibilidad de ser tomado y reposicionado
+        const bol = document.createElement('a-entity');
+        bol.setAttribute('id', 'bol');
+        bol.setAttribute('mixin', 'grab');
+        bol.setAttribute('class', 'grab');
+        bol.setAttribute('gltf-model', 'url(assets/bowl.glb)');
+        bol.setAttribute('position', '1.9 1.4 -2.7');
+        bol.setAttribute('bandeja-checker', 'tolerance: 0.2');
+        bol.setAttribute('reset', 'resetPosition: 1.9 1.4 -2.7');
+        escena.appendChild(bol);
+    } else {
+        const devallPasta = document.createElement('a-plane');
+        devallPasta.setAttribute('color', 'black');
+        devallPasta.setAttribute('width', '1.6');
+        devallPasta.setAttribute('height', '0.9');
+        devallPasta.setAttribute('position', '-5.3 0.57 -2.8');
+        devallPasta.setAttribute('rotation','-90 0 0');
+        const pastaCoca = document.createElement('a-box');
+        pastaCoca.setAttribute('id', 'pastaCoca');
+        pastaCoca.setAttribute('position', '-5.3 0.57 -2.8');
+        pastaCoca.setAttribute('width', '1.4');
+        pastaCoca.setAttribute('height', '0.05');
+        pastaCoca.setAttribute('depth', '0.75');
+        pastaCoca.setAttribute('color', '#FFE6A3');
+        pastaCoca.setAttribute('static-body', '');
+        pastaCoca.setAttribute('pasta-checker', 'tolerance: 0.2');
+        escena.appendChild(pastaCoca);
+        escena.appendChild(devallPasta);
+    }
 
     // Añadir texto informativo sobre la bandeja
     const textoBandeja = document.createElement('a-entity');
-    textoBandeja.setAttribute('text', 'value: Coloca los ingredientes cocinados en la bandeja para emplatar; color: white; align: center; width: 2;');
+    textoBandeja.setAttribute('text', 'value: Coloca los ingredientes cocinados para emplatar; color: white; align: center; width: 2;');
     textoBandeja.setAttribute('position', '-5.5 2 -3.3');
     escena.appendChild(textoBandeja);
-
-    // Añadir el bol con posibilidad de ser tomado y reposicionado
-    const bol = document.createElement('a-entity');
-    bol.setAttribute('id', 'bol');
-    bol.setAttribute('mixin', 'grab');
-    bol.setAttribute('class', 'grab');
-    bol.setAttribute('gltf-model', 'url(assets/bowl.glb)');
-    bol.setAttribute('position', '1.9 1.4 -2.7');
-    bol.setAttribute('bandeja-checker', 'tolerance: 0.2');
-    bol.setAttribute('reset', 'resetPosition: 1.9 1.4 -2.7');
-    escena.appendChild(bol);
 
     const armarioHTML = `
         <a-entity id="armario" position="3 2 -3.7" scale="0.7 0.7 0.7" puerta class="clickable">
@@ -488,6 +508,7 @@ function cargarNuevoNivel(escena) {
     escena.appendChild(obstaculo);
 }
 
+let nombreNivelActual = '';
 function crearPartidaYRedirigir(nombreNivel) {
     fetch('/nuevaPartida', {
         method: 'POST',
@@ -499,7 +520,8 @@ function crearPartidaYRedirigir(nombreNivel) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                cambiarEscena();
+                nombreNivelActual = nombreNivel;
+                cambiarEscena(nombreNivel);
                 iniciarFuncionesJuego();
                 // Simplificado
             } else {
@@ -508,6 +530,70 @@ function crearPartidaYRedirigir(nombreNivel) {
         })
         .catch(error => {
             console.error('Error al crear la partida:', error);
+        });
+}
+
+function seleccionarPartida() {
+    fetch('/obtenerPartidas', {
+        method: 'GET', // Asumiendo que tu endpoint es GET
+        credentials: 'include', // Para incluir cookies de sesión, si las usas
+    })
+        .then(response => response.json())
+        .then(partidas => {
+            const menu = document.getElementById("selectPartidaMenu");
+            menu.innerHTML = ''; // Limpiar el menú para evitar duplicados
+
+            // Asumiendo que partidas es un arreglo de objetos con información de las partidas
+            partidas.forEach((partida, index) => {
+                if (index < 4) { // Limitar a mostrar máximo 4 partidas
+                    const plane = document.createElement('a-plane');
+                    plane.setAttribute('position', `0 ${0.5 - 0.5 * index} 0`);
+                    plane.setAttribute('material', 'color', index % 2 === 0 ? '#0C9' : '#F00');
+                    plane.setAttribute('width', '2');
+                    plane.setAttribute('height', '0.5');
+
+                    const text = document.createElement('a-text');
+                    text.setAttribute('value', `Partida ID: ${partida.IdPartida}`);
+                    text.setAttribute('align', 'center');
+
+                    plane.appendChild(text);
+                    menu.appendChild(plane);
+
+                    // Opcional: Añadir un evento onclick a cada plane para cargar la partida seleccionada
+                    plane.addEventListener('click', () => cargarPartida(partida.IdPartida, partida.NomNiv));
+                }
+            });
+
+            // Hacer visible el menú con las partidas
+            menu.setAttribute('visible', 'true');
+        })
+        .catch(error => console.error('Error:', error));
+}
+
+function cargarPartida(idPartida, nombreNivel) {
+    fetch('/seleccionarPartida', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ idPartida: idPartida }), // Envía el idPartida al backend
+        credentials: 'include', // Para incluir cookies de sesión, si las usas
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                nombreNivelActual = nombreNivel;
+                cambiarEscena(nombreNivel);
+                iniciarFuncionesJuego();
+                // Redirige sin pasar idPartida en la URL
+            } else {
+                console.error('No se pudo seleccionar la partida.', data.message);
+                // Maneja el error mostrando un mensaje al usuario, si es necesario
+            }
+        })
+        .catch(error => {
+            console.error('Error al seleccionar la partida:', error);
+            // Maneja el error mostrando un mensaje al usuario, si es necesario
         });
 }
 
@@ -774,7 +860,6 @@ function iniciarFuncionesJuego() {
             this.el.addEventListener('collide', this.handleCollision.bind(this));
         },
         handleCollision: function (evt) {
-            console.log("Intento de colisión detectado", evt.detail.body.el);
             let collidedEl = evt.detail.body.el;
             let isCooked = collidedEl.getAttribute("data-cocinado") === 'true';
             if (isCooked && this.cookedItems != this.requiredItems) {
@@ -817,7 +902,149 @@ function iniciarFuncionesJuego() {
                 bowl.removeAttribute('tomate-salsa');
                 setTimeout(() => {
                     this.showEndScreen();
-                }, 3000); 
+                }, 3000);
+            }
+        },
+        showEndScreen: function () {
+            let endScreen = document.getElementById('endScreen');
+            endScreen.setAttribute('visible', 'true');  // Hacer visible la pantalla de finalización
+
+            let cameraRig = document.getElementById('rig');
+            let screenPosition = endScreen.getAttribute('position');
+
+            // Calcular la nueva posición delante del endScreen
+            let newPosition = {
+                x: screenPosition.x,
+                y: screenPosition.y,
+                z: screenPosition.z + 2 // Ajusta según sea necesario para posicionar la cámara adecuadamente
+            };
+
+            // Establecer directamente la nueva posición y rotación de la cámara
+            cameraRig.setAttribute('position', `${newPosition.x} ${newPosition.y} ${newPosition.z}`);
+            cameraRig.setAttribute('rotation', '0 0 0');  // Asegúrate de que la rotación final sea correcta
+
+            // Opcional: Desactivar los controles de movimiento y WASD
+            this.disableControls();
+
+            // Deshabilitar clic o cualquier otra interacción posible
+            this.disableInteractions();
+
+            // Detener cualquier sonido de pasos que podría estar jugando
+            this.stopFootsteps();
+        },
+
+        disableControls: function () {
+            let cameraRig = document.getElementById('rig');
+            if (cameraRig.components['movement-controls']) {
+                cameraRig.components['movement-controls'].data.enabled = false;
+            }
+            let camera = cameraRig.querySelector('[camera]');
+            if (camera.components['wasd-controls']) {
+                camera.components['wasd-controls'].pause();
+            }
+        },
+
+        disableInteractions: function () {
+            document.querySelectorAll('.clickable').forEach(function (clickable) {
+                clickable.classList.remove('clickable');
+            });
+        },
+
+        stopFootsteps: function () {
+            let footsteps = document.getElementById('footsteps');
+            if (footsteps.components.sound) {
+                footsteps.components.sound.stopSound();
+            }
+        },
+
+        checkPosition: function (collidedPos, indicatorPos) {
+            return Math.abs(collidedPos.x - indicatorPos.x) <= this.data.tolerance &&
+                Math.abs(collidedPos.y - indicatorPos.y) <= this.data.tolerance &&
+                Math.abs(collidedPos.z - indicatorPos.z) <= this.data.tolerance;
+        },
+        setIndicator: function (active, collidedEl, indicator) {
+            if (active) {
+                indicator.setAttribute('material', 'color', 'green');
+                collidedEl.removeAttribute('dynamic-body');
+                collidedEl.setAttribute('static-body', '');
+            }
+        }
+    });
+
+    AFRAME.registerComponent('pasta-checker', {
+        schema: {
+            tolerance: { type: 'number', default: 0.3 },
+            allCookedRequired: { type: 'bool', default: true } // Asegura que todos deben estar cocidos
+        },
+        init: function () {
+            this.cookedItems = 0;
+            this.requiredItems = 3; // Ajustar según el número de elementos necesarios
+            console.log("Componente pasta-checker inicializado");
+            this.indicators = [];
+            // Crear tres indicadores para tres posibles ingredientes
+            for (let i = 0; i < 3; i++) {
+                let indicator = document.createElement('a-box');
+                let offset = (i - 1) * 0.5; // Offset para posicionar cada indicador
+                if(i === 1){
+                    indicator.setAttribute('position', `${-5.3 + offset} 0.6 -2.9`);
+                }else{
+                    indicator.setAttribute('position', `${-5.3 + offset} 0.6 -2.7`);
+                }
+                indicator.setAttribute('rotation', '-90 0 0');
+                indicator.setAttribute('width', '0.2');
+                indicator.setAttribute('height', '0.2');
+                indicator.setAttribute('depth', '0.1');
+                indicator.setAttribute('material', 'color: blue; opacity: 0.2; transparent: true');
+                indicator.setAttribute('visible', 'true');
+                document.querySelector('a-scene').appendChild(indicator);
+                this.indicators.push(indicator);
+            }
+            this.el.addEventListener('collide', this.handleCollision.bind(this));
+        },
+        handleCollision: function (evt) {
+            let collidedEl = evt.detail.body.el;
+            let isCooked = collidedEl.getAttribute("data-cocinado") === 'true';
+            if (isCooked && this.cookedItems != this.requiredItems) {
+                this.indicators.forEach((indicator, index) => {
+                    let indicatorPos = AFRAME.utils.coordinates.parse(indicator.getAttribute('position'));
+                    let collidedPos = collidedEl.object3D.position;
+                    if (this.checkPosition(collidedPos, indicatorPos)) {
+                        this.setIndicator(true, collidedEl, indicator);
+                        this.cookedItems++;
+                    } else {
+                        this.setIndicator(false, collidedEl, indicator);
+                    }
+                });
+            }
+            if (this.cookedItems === this.requiredItems && collidedEl.id === 'bol') {
+                let bowl = document.querySelector('#bol');
+                // Verificar si el bol tiene el atributo 'tomate-salsa'
+                if (bowl.getAttribute('tomate-salsa') === 'true') {
+                    this.moveTomatoToTray(bowl);
+                    console.log("moveTomato");
+                }
+            }
+
+        },
+        moveTomatoToTray: function (bowl) {
+            // Verificar si el bol tiene el atributo 'tomate-salsa'
+            if (bowl.getAttribute('tomate-salsa') === 'true') {
+                // Crear un a-plane que representará la salsa de tomate
+                let tomatoSauce = document.createElement('a-plane');
+                tomatoSauce.setAttribute('height', '0.2');  // Dimensiones apropiadas para la bandeja
+                tomatoSauce.setAttribute('width', '1');
+                tomatoSauce.setAttribute('color', '#740303');  // Color rojo tomate
+                tomatoSauce.setAttribute('position', '-5.5 0.7 -2.8');  // Obtener la posición adecuada para la salsa
+                tomatoSauce.setAttribute('rotation', '-90 0 0');  // Asegurar que el plane esté orientado horizontalmente
+                console.log("antes de añadir");
+                document.querySelector('a-scene').appendChild(tomatoSauce);
+                if (bowl.getObject3D('semicircle')) {
+                    bowl.removeObject3D('semicircle');
+                }
+                bowl.removeAttribute('tomate-salsa');
+                setTimeout(() => {
+                    this.showEndScreen();
+                }, 3000);
             }
         },
         showEndScreen: function () {
@@ -891,9 +1118,11 @@ function iniciarFuncionesJuego() {
         document.querySelector('#woodenTable').setAttribute('static-body', '');
     });
 
-    document.querySelector('#bandeja').addEventListener('model-loaded', () => {
-        document.querySelector('#bandeja').setAttribute('static-body', '');
-    });
+    if (document.querySelector('#bandeja')) {
+        document.querySelector('#bandeja').addEventListener('model-loaded', () => {
+            document.querySelector('#bandeja').setAttribute('static-body', '');
+        });
+    }
 
     document.querySelector('#shaker').addEventListener('model-loaded', () => {
         document.querySelector('#shaker').setAttribute('static-body', '');
@@ -908,6 +1137,8 @@ function iniciarFuncionesJuego() {
         { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5', color: '#008000', colorCooked: '#153504' },
         { nombre: 'patata', modelo: './assets/patata.glb', scale: '1.5 1.5 1.5', color: '#FFFF00', colorCooked: '#A28200' },
         { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5', color: '#FF0000', colorCooked: '#3E0000' },
+        { nombre: 'cebolla', modelo: './assets/onion.glb', scale: '1.5 1.5 1.5', color: '#FFFFFF', colorCooked: '#FFFFFF' },
+        { nombre: 'pimiento verde', modelo: './assets/pimientoVerde.glb', scale: '1.5 1.5 1.5', color: '#008000', colorCooked: '#008000' },
 
         // Otros ingredientes...
     ];
@@ -973,7 +1204,7 @@ function iniciarFuncionesJuego() {
                         entity.setAttribute('data-idInteractuable', ingrediente.IdInteractuable);
                         entity.setAttribute('data-color', ingredienteEncontrado.color);  // Guardar el color en el elemento
                         entity.setAttribute('reset', `resetPosition: ${position}`);
-                        if (ingrediente.NomInteractuable === 'tomate') {
+                        if (ingrediente.NomInteractuable === 'tomate' && nombreNivelActual === 'Tumbet') {
                             entity.setAttribute('es-tomate', 'true');
                             entity.setAttribute('colocado-en-batidora', '');
                         } else {
@@ -982,26 +1213,41 @@ function iniciarFuncionesJuego() {
                         document.querySelector('a-scene').appendChild(entity);
                     }
                     // Crear y añadir la barra de progreso
-                    if (!ingrediente.EsTallat && entity && ingrediente.NomInteractuable != 'tomate') {
-                        const progressBar = document.createElement('a-box');
-                        const progressBarPosition = `${positionX} 0.2 -3`; // Posición Y ligeramente arriba del ingrediente
-                        progressBar.setAttribute('position', progressBarPosition);
-                        const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
-                        const anchoBarra = vidaInicial / 5; // Calcula el ancho basado en los puntos de vida
-                        progressBar.setAttribute('width', anchoBarra.toString());
-                        progressBar.setAttribute('height', '0.02');
-                        progressBar.setAttribute('depth', '0.05');
-                        progressBar.setAttribute('color', 'green'); // Color verde para representar la salud
-
-                        progressBar.classList.add('barra-vida');
-                        progressBar.setAttribute('data-nomInteractuable', ingrediente.NomInteractuable);
-                        entity.barraProgreso = progressBar; // Guardar referencia a la barra de progreso en el ingrediente
-                        entity.setAttribute('actualizar-barra-progreso', '');
-                        document.querySelector('a-scene').appendChild(progressBar);
+                    console.log(nombreNivelActual);
+                    console.log(ingrediente.NomInteractuable);
+                    if (!ingrediente.EsTallat && entity) {
+                        // Revisa si el ingrediente es tomate y si estamos en el nivel correcto
+                        if (ingrediente.NomInteractuable === 'tomate') {
+                            if (nombreNivelActual === 'Coca de Trampo') {
+                                // Solo añadir la barra de progreso al tomate en el nivel 'coca de trampó'
+                                agregarBarraDeProgreso(entity, ingrediente, positionX);
+                            }
+                        } else {
+                            // Para otros ingredientes que no son tomate, siempre añadir la barra de progreso
+                            agregarBarraDeProgreso(entity, ingrediente, positionX);
+                        }
                     }
                 });
             })
             .catch(error => console.error('Error al obtener ingredientes:', error));
+    }
+
+    function agregarBarraDeProgreso(entity, ingrediente, positionX) {
+        const progressBar = document.createElement('a-box');
+        const progressBarPosition = `${positionX} 0.2 -3`; // Posición Y ligeramente arriba del ingrediente
+        progressBar.setAttribute('position', progressBarPosition);
+        const vidaInicial = ingrediente.PuntsVida / 20; // Asumiendo 20 como máximo de puntos de vida
+        const anchoBarra = vidaInicial / 5; // Calcula el ancho basado en los puntos de vida
+        progressBar.setAttribute('width', anchoBarra.toString());
+        progressBar.setAttribute('height', '0.02');
+        progressBar.setAttribute('depth', '0.05');
+        progressBar.setAttribute('color', 'green'); // Color verde para representar la salud
+
+        progressBar.classList.add('barra-vida');
+        progressBar.setAttribute('data-nomInteractuable', ingrediente.NomInteractuable);
+        entity.barraProgreso = progressBar; // Guardar referencia a la barra de progreso en el ingrediente
+        entity.setAttribute('actualizar-barra-progreso', '');
+        document.querySelector('a-scene').appendChild(progressBar);
     }
 
     AFRAME.registerComponent('actualizar-barra-progreso', {
@@ -1609,69 +1855,6 @@ function iniciarFuncionesJuego() {
 document.addEventListener('a-keyboard-update', updateInput);
 
 var input = '';
-
-function seleccionarPartida() {
-    fetch('/obtenerPartidas', {
-        method: 'GET', // Asumiendo que tu endpoint es GET
-        credentials: 'include', // Para incluir cookies de sesión, si las usas
-    })
-        .then(response => response.json())
-        .then(partidas => {
-            const menu = document.getElementById("selectPartidaMenu");
-            menu.innerHTML = ''; // Limpiar el menú para evitar duplicados
-
-            // Asumiendo que partidas es un arreglo de objetos con información de las partidas
-            partidas.forEach((partida, index) => {
-                if (index < 4) { // Limitar a mostrar máximo 4 partidas
-                    const plane = document.createElement('a-plane');
-                    plane.setAttribute('position', `0 ${0.5 - 0.5 * index} 0`);
-                    plane.setAttribute('material', 'color', index % 2 === 0 ? '#0C9' : '#F00');
-                    plane.setAttribute('width', '2');
-                    plane.setAttribute('height', '0.5');
-
-                    const text = document.createElement('a-text');
-                    text.setAttribute('value', `Partida ID: ${partida.IdPartida}`);
-                    text.setAttribute('align', 'center');
-
-                    plane.appendChild(text);
-                    menu.appendChild(plane);
-
-                    // Opcional: Añadir un evento onclick a cada plane para cargar la partida seleccionada
-                    plane.addEventListener('click', () => cargarPartida(partida.IdPartida));
-                }
-            });
-
-            // Hacer visible el menú con las partidas
-            menu.setAttribute('visible', 'true');
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-function cargarPartida(idPartida) {
-    fetch('/seleccionarPartida', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ idPartida: idPartida }), // Envía el idPartida al backend
-        credentials: 'include', // Para incluir cookies de sesión, si las usas
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                cambiarEscena();
-                iniciarFuncionesJuego();
-                // Redirige sin pasar idPartida en la URL
-            } else {
-                console.error('No se pudo seleccionar la partida.', data.message);
-                // Maneja el error mostrando un mensaje al usuario, si es necesario
-            }
-        })
-        .catch(error => {
-            console.error('Error al seleccionar la partida:', error);
-            // Maneja el error mostrando un mensaje al usuario, si es necesario
-        });
-}
 
 
 function nuevaPartida() {

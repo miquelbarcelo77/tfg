@@ -310,9 +310,8 @@ document.addEventListener('DOMContentLoaded', () => {
       { nombre: 'tomate', modelo: './assets/tomato.glb', scale: '1.5 1.5 1.5', color: 'red' },
       { nombre: 'calabazin', modelo: './assets/cucumber.glb', scale: '1.5 1.5 1.5', color: 'green' },
       { nombre: 'patata', modelo: './assets/patata.glb', scale: '1.5 1.5 1.5', color: 'yellow' },
-      { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5', color: 'blue' },
+      { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5', color: 'red' },
 
-      // Otros ingredientes...
     ];
 
     // Ajuste en la función agregarIngredientes para incluir EsTallat
