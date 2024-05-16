@@ -6,22 +6,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const botonSubirVolumen = document.querySelector('#botonSubirVolumen');
     const botonBajarVolumen = document.querySelector('#botonBajarVolumen');
     const logoutButton = document.querySelector('#botonSalir');
-    
 
-    // Espera a que se cargue la escena
     document.querySelector('a-scene').addEventListener('loaded', function () {
         var botonTumbet = document.querySelector('#botonTumbet');
-        // Obtiene referencia al botón de Tortilla
         var botonCocaDeTrampo = document.querySelector('#botonCocaDeTrampo');
-        // Cuando se haga clic en el botón de Tumbet
         botonTumbet.addEventListener('click', function () {
-            // Redirige a la página de inicio.html al hacer clic en el botón de Tumbet
             crearPartidaYRedirigir('Tumbet');
         });
 
-        // Cuando se haga clic en el botón de Tortilla
         botonCocaDeTrampo.addEventListener('click', function () {
-            // Redirige a la página de inicio.html al hacer clic en el botón de Coca de Trampó
             crearPartidaYRedirigir('Coca de Trampo');
         });
 
@@ -41,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         function ajustarVolumen(cambio) {
             const audioEntity = document.querySelector('#audioEntity a-sound');
             let nuevoVolumen = parseFloat(audioEntity.getAttribute('volume')) + cambio;
-            nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen)); // Asegurar que el volumen esté entre 0 y 1
+            nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen));
             audioEntity.setAttribute('volume', nuevoVolumen);
             console.log(`Volumen ajustado a ${nuevoVolumen}`);
         }
@@ -51,23 +44,132 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+function nuevaPartida() {
+    document.getElementById("selectPartidaMenu").setAttribute('visible', 'false');
+    document.getElementById("menuInicio").setAttribute('visible', 'true');
+    var selectPartidaMenu = document.getElementById("selectPartidaMenu");
+    while (selectPartidaMenu.firstChild) {
+        selectPartidaMenu.removeChild(selectPartidaMenu.firstChild);
+    }
+}
+
+function iniciarSesion(username) {
+    var loginMenu = document.getElementById("loginMenu");
+
+    while (loginMenu.firstChild) {
+        loginMenu.removeChild(loginMenu.firstChild);
+    }
+    document.querySelector('#selectPartidaMenu').setAttribute('visible', 'true'); // Mostrar menú de partida
+    console.log("Sesion iniciada, usuario:" + username)
+    localStorage.setItem('usuarioAutenticado', 'true');
+}
+
+function enviarNombreUsuario() {
+    var username = document.getElementById("inputField").getAttribute("value");
+    console.log(username);
+    // Verificar que el nombre de usuario no esté vacío
+    if (!username) {
+        alert("Por favor, introduce tu nombre de usuario");
+        return;
+    }
+    // Enviar el nombre de usuario al servidor para verificar si está repetido
+    $.ajax({
+        url: "/verificar-usuario",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ username: username }),
+        success: function (response) {
+            console.log(response);
+            if (response.existe) {
+                iniciarSesion(username);
+            } else {
+                // Si el nombre de usuario no está repetido en el servidor, continuar con el registro
+                guardarUsuario(username);
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error("Error al verificar el nombre de usuario:", error);
+            alert("Error al verificar el nombre de usuario");
+        }
+    });
+}
+
+// Función para guardar el nombre de usuario en el servidor si no está repetido
+function guardarUsuario(username) {
+    $.ajax({
+        url: "/guardar-usuario",
+        method: "POST",
+        contentType: "application/json",
+        data: JSON.stringify({ username: username }),
+        success: function (response) {
+            // Activar los controles WASD de la cámara
+
+            // Mostrar el panel de menu
+            iniciarSesion(username);
+        },
+        error: function (xhr, status, error) {
+            console.error("Error al guardar el nombre de usuario:", error);
+            alert("Error al guardar el nombre de usuario");
+        }
+    });
+}
+
+document.addEventListener('a-keyboard-update', updateInput);
+var input = '';
+
+AFRAME.registerComponent('keyboard-input', {
+    init: function () {
+        const inputField = document.getElementById('inputField');
+
+        // Escucha el evento 'a-keyboard-update' para recibir actualizaciones del teclado
+        this.el.addEventListener('a-keyboard-update', (event) => {
+            const char = event.detail.char; // Obtiene el carácter de la tecla presionada
+            const action = event.detail.action; // Obtiene la acción (pulsación, retroceso, etc.)
+
+            // Si la acción es 'press', agrega el carácter al valor del campo de texto
+            if (action === 'press') {
+                console.log('Tecla presionada:', char);
+                console.log('Valor actual del campo de texto:', inputField.getAttribute('text').value);
+                inputField.setAttribute('text', 'value', inputField.getAttribute('text').value + char);
+                console.log('Nuevo valor del campo de texto:', inputField.getAttribute('text').value);
+            }
+        });
+    }
+});
+
+function updateInput(e) {
+    var code = parseInt(e.detail.code);
+    switch (code) {
+        case 8: // Backspace
+            input = input.slice(0, -1);
+            break;
+        case 13: // Enter
+            var inputField = document.querySelector('#inputField');
+            inputField.setAttribute('value', input);
+            input = ''; // Reset input value
+            enviarNombreUsuario();
+            return;
+        default:
+            input += e.detail.value;
+            break;
+    }
+    document.querySelector('#inputField').setAttribute('value', input + '_');
+}
+
 function cambiarEscena(nombreNivel) {
     const escenaJuego = document.getElementById('escenaJuego');
 
-    // Limpiar todo el contenido actual de escenaJuego
+    // Llevar actual
     while (escenaJuego.firstChild) {
         console.log(escenaJuego.firstChild);
         escenaJuego.removeChild(escenaJuego.firstChild);
     }
 
-    // Aquí añades el contenido nuevo, por ejemplo, cargando una nueva configuración de entidad para el nivel
     cargarNuevoNivel(escenaJuego, nombreNivel);
 }
 
 function cargarNuevoNivel(escena, nombreNivel) {
-    // Puedes definir esta función para cargar diferentes niveles o escenas
-    // Ejemplo simple añadiendo un nuevo sky y algunos objetos
-    // Crear y configurar el sky
+
     const sky = document.createElement('a-sky');
     sky.setAttribute('id', 'image-360');
     sky.setAttribute('src', '#city');
@@ -84,22 +186,18 @@ function cargarNuevoNivel(escena, nombreNivel) {
     endScreen.setAttribute('height', '2');
     endScreen.setAttribute('color', '#FFFFFF');
 
-    // Crear el fondo del botón
     let buttonBackground = document.createElement('a-plane');
     buttonBackground.setAttribute('color', '#CCCCCC');
     buttonBackground.setAttribute('height', '0.4');
     buttonBackground.setAttribute('width', '2');
     buttonBackground.setAttribute('position', '0 -0.5 0.05');
-    buttonBackground.classList.add('clickable'); // Hacerlo clickeable
+    buttonBackground.classList.add('clickable');
 
-    // Crear el texto del botón
     let buttonText = document.createElement('a-text');
     buttonText.setAttribute('value', 'Regresar a Inicio');
     buttonText.setAttribute('align', 'center');
     buttonText.setAttribute('color', '#000000');
-    buttonText.setAttribute('position', '0 0 0.1'); // Ligeramente por delante del fondo para evitar z-fighting
-
-    // Añadir evento de clic al fondo del botón
+    buttonText.setAttribute('position', '0 0 0.1');
     buttonBackground.addEventListener('click', function () {
         window.location.href = 'index.html';
     });
@@ -288,7 +386,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
     fryingPan.setAttribute('mixin', 'grabSarten');
     fryingPan.setAttribute('class', 'grab');
     fryingPan.setAttribute('gltf-model', 'url(assets/frying_pan_scaleZ.glb)');
-    fryingPan.setAttribute('position', '3.1 1.2 -3');
+    fryingPan.setAttribute('position', '-2.2 0.54 -3.05');
     fryingPan.setAttribute('rotation', '0 0 0');
     fryingPan.setAttribute('reset', 'resetPosition: 3.1 1.2 -3');
     fryingPan.setAttribute('sarten', '');
@@ -446,7 +544,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
         pastaCoca.setAttribute('height', '0.05');
         pastaCoca.setAttribute('depth', '0.75');
         pastaCoca.setAttribute('color', '#FFE6A3');
-        pastaCoca.setAttribute('static-body', '');
+        pastaCoca.setAttribute('body', 'type: static');
         pastaCoca.setAttribute('pasta-checker', 'tolerance: 0.2');
         pastaCoca.setAttribute('puerta-horno', 'tolerance: 0.2');
         escena.appendChild(pastaCoca);
@@ -495,8 +593,6 @@ function cargarNuevoNivel(escena, nombreNivel) {
     // Crear el código HTML para el horno
     const hornoHTML = `
         <a-entity id="horno" position="-7.5 1 -3" scale="0.7 0.7 0.7" puerta-horno class="clickable">
-            <a-entity progress-bar position="0 0 0" rotation="0 45 0"></a-entity>
-            <!-- Partes de la nevera -->
             <a-box id="arribaHorno" width="2" height="0.1" depth="1" color="black" position="0 1 0.5"
                 rotation="0 0 0"></a-box>
             <a-box id="detrasHorno" width="2" height="0.1" depth="2" color="black" position="0 0 0"
@@ -528,6 +624,22 @@ function cargarNuevoNivel(escena, nombreNivel) {
     obstaculo.setAttribute('color', '#d2b48c');
     obstaculo.setAttribute('static-body', '');
     escena.appendChild(obstaculo);
+
+    const bajoHorno = document.createElement('a-box');
+    bajoHorno.setAttribute('position', '-8.2 -0.2 -3');
+    bajoHorno.setAttribute('width', '4');
+    bajoHorno.setAttribute('height', '1');
+    bajoHorno.setAttribute('depth', '1.5');
+    bajoHorno.setAttribute('color', '#d2b48c');
+    bajoHorno.setAttribute('static-body', '');
+    escena.appendChild(bajoHorno);
+
+    if (nombreNivel === 'Coca de Trampo') {
+        const text = document.createElement('a-entity');
+        text.setAttribute('text', 'value: Coloca la coca de trampo en el horno; color: white; align: center; width: 2;');
+        text.setAttribute('position', '-7.5 2 -2.4');
+        escena.appendChild(text);
+    }
 }
 
 let nombreNivelActual = '';
@@ -575,7 +687,7 @@ function seleccionarPartida() {
                     plane.setAttribute('height', '0.5');
 
                     const text = document.createElement('a-text');
-                    text.setAttribute('value', `Partida ID: ${partida.IdPartida}`);
+                    text.setAttribute('value', `${partida.NomNiv}`);
                     text.setAttribute('align', 'center');
 
                     plane.appendChild(text);
@@ -585,9 +697,25 @@ function seleccionarPartida() {
                     plane.addEventListener('click', () => cargarPartida(partida.IdPartida, partida.NomNiv));
                 }
             });
+            const plane = document.createElement('a-plane');
+            plane.setAttribute('position', `0 -2 0`);
+            plane.setAttribute('material', 'color', '#F00');
+            plane.setAttribute('width', '1');
+            plane.setAttribute('height', '0.5');
+            plane.setAttribute('id', 'retrocesoButtonPartida');
+            const text = document.createElement('a-text');
+            text.setAttribute('value', 'SALIR');
+            text.setAttribute('align', 'center');
+            plane.appendChild(text);
+            menu.appendChild(plane);
 
             // Hacer visible el menú con las partidas
             menu.setAttribute('visible', 'true');
+
+            plane.addEventListener('click', function () {
+                window.location.href = 'index.html';
+            });
+
         })
         .catch(error => console.error('Error:', error));
 }
@@ -657,29 +785,7 @@ function iniciarFuncionesJuego() {
             }
         }, 1000);
     }
-    //OPTIONS
-    /*menuOpcionesButton.addEventListener('click', () => {
-        menuOpcionesOpen.setAttribute('visible', true);
-    });
 
-    retrocesoButton.addEventListener('click', () => {
-        menuOpcionesOpen.setAttribute('visible', false);
-    });
-
-    logoutButton.addEventListener('click', () => {
-        localStorage.removeItem('usuarioAutenticado');
-        window.location.href = 'index.html';
-    });
-
-    function ajustarVolumen(cambio) {
-        const audioEntity = document.querySelector('#audioEntity a-sound');
-        let nuevoVolumen = parseFloat(audioEntity.getAttribute('volume')) + cambio;
-        nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen)); // Asegurar que el volumen esté entre 0 y 1
-        audioEntity.setAttribute('volume', nuevoVolumen);
-    }
-
-    botonSubirVolumen.addEventListener('click', () => ajustarVolumen(0.1));
-    botonBajarVolumen.addEventListener('click', () => ajustarVolumen(-0.1));*/
 
     //FOGONES
     fireSource.addEventListener('click', () => {
@@ -711,7 +817,7 @@ function iniciarFuncionesJuego() {
 
         for (var i = 0; i < numberOfBoxes; i++) {
             var angle = (i / numberOfBoxes) * Math.PI * 2; // Ángulo para cada caja
-            var centerPosition = { x: -2.2, y: 0.61, z: -3.05 }; // Nueva posición central para el círculo de fuego
+            var centerPosition = { x: -2.2, y: 0.58, z: -3.05 }; // Nueva posición central para el círculo de fuego
             var x = Math.cos(angle) * radius + centerPosition.x;
             var y = centerPosition.y;
             var z = Math.sin(angle) * radius + centerPosition.z;
@@ -865,10 +971,10 @@ function iniciarFuncionesJuego() {
             this.requiredItems = 3; // Ajustar según el número de elementos necesarios
             console.log("Componente bandeja-checker inicializado");
             this.indicators = [];
-            // Crear tres indicadores para tres posibles ingredientes
+            // Crear tres indicadors per tres ingredients
             for (let i = 0; i < 3; i++) {
                 let indicator = document.createElement('a-box');
-                let offset = (i - 1) * 0.5; // Offset para posicionar cada indicador
+                let offset = (i - 1) * 0.5;
                 indicator.setAttribute('position', `${-5.5 + offset} 0.6 -2.8`);
                 indicator.setAttribute('rotation', '-90 0 0');
                 indicator.setAttribute('width', '0.2');
@@ -898,7 +1004,6 @@ function iniciarFuncionesJuego() {
             }
             if (this.cookedItems === this.requiredItems && collidedEl.id === 'bol') {
                 let bowl = document.querySelector('#bol');
-                // Verificar si el bol tiene el atributo 'tomate-salsa'
                 if (bowl.getAttribute('tomate-salsa') === 'true') {
                     this.moveTomatoToTray(bowl);
                     console.log("moveTomato");
@@ -907,15 +1012,14 @@ function iniciarFuncionesJuego() {
 
         },
         moveTomatoToTray: function (bowl) {
-            // Verificar si el bol tiene el atributo 'tomate-salsa'
             if (bowl.getAttribute('tomate-salsa') === 'true') {
-                // Crear un a-plane que representará la salsa de tomate
+                // Crear un a-plane que representarà la salsa
                 let tomatoSauce = document.createElement('a-plane');
-                tomatoSauce.setAttribute('height', '0.2');  // Dimensiones apropiadas para la bandeja
+                tomatoSauce.setAttribute('height', '0.2');
                 tomatoSauce.setAttribute('width', '1');
-                tomatoSauce.setAttribute('color', '#740303');  // Color rojo tomate
-                tomatoSauce.setAttribute('position', '-5.5 0.7 -2.8');  // Obtener la posición adecuada para la salsa
-                tomatoSauce.setAttribute('rotation', '-90 0 0');  // Asegurar que el plane esté orientado horizontalmente
+                tomatoSauce.setAttribute('color', '#740303');  // Color vermell tomate
+                tomatoSauce.setAttribute('position', '-5.5 0.7 -2.8');
+                tomatoSauce.setAttribute('rotation', '-90 0 0');
                 console.log("antes de añadir");
                 document.querySelector('a-scene').appendChild(tomatoSauce);
                 if (bowl.getObject3D('semicircle')) {
@@ -934,24 +1038,19 @@ function iniciarFuncionesJuego() {
             let cameraRig = document.getElementById('rig');
             let screenPosition = endScreen.getAttribute('position');
 
-            // Calcular la nueva posición delante del endScreen
             let newPosition = {
                 x: screenPosition.x,
                 y: screenPosition.y,
-                z: screenPosition.z + 2 // Ajusta según sea necesario para posicionar la cámara adecuadamente
+                z: screenPosition.z + 2
             };
 
-            // Establecer directamente la nueva posición y rotación de la cámara
             cameraRig.setAttribute('position', `${newPosition.x} ${newPosition.y} ${newPosition.z}`);
-            cameraRig.setAttribute('rotation', '0 0 0');  // Asegúrate de que la rotación final sea correcta
+            cameraRig.setAttribute('rotation', '0 0 0');
 
-            // Opcional: Desactivar los controles de movimiento y WASD
             this.disableControls();
 
-            // Deshabilitar clic o cualquier otra interacción posible
             this.disableInteractions();
 
-            // Detener cualquier sonido de pasos que podría estar jugando
             this.stopFootsteps();
         },
 
@@ -992,23 +1091,20 @@ function iniciarFuncionesJuego() {
             }
         }
     });
-    
+
     AFRAME.registerComponent('pasta-checker', {
         schema: {
-            tolerance: { type: 'number', default: 0.3 },
-            allCookedRequired: { type: 'bool', default: true } // Asegura que todos deben estar cocidos
+            tolerance: { type: 'number', default: 0.15 },
         },
         init: function () {
             this.items = 0;
-            this.requiredItems = 4; // Ajustar según el número de elementos necesarios
+            this.requiredItems = 4;
             console.log("Componente pasta-checker inicializado");
             this.indicators = [];
-            this.addedIngredients = []; // Array para almacenar los ingredientes cocinados
-            this.elementoChoca = document.createElement('a-entity');
-            // Crear tres indicadores para tres posibles ingredientes
+
             for (let i = 0; i < 4; i++) {
                 let indicator = document.createElement('a-box');
-                let offset = (i - 1) * 0.3; // Offset para posicionar cada indicador
+                let offset = (i - 1) * 0.3;
                 if (i === 1 || i === 3) {
                     indicator.setAttribute('position', `${-5.4 + offset} 0.6 -2.9`);
                 } else {
@@ -1025,24 +1121,8 @@ function iniciarFuncionesJuego() {
             }
 
             this.el.addEventListener('collide', this.handleCollision.bind(this));
-            this.el.addEventListener('componentremoved', function (evt) {
-                if (evt.detail.name === 'static-body') {
-                    console.log('static-body removed, applying dynamic-body');
-                    let indicator = document.createElement('a-box');
-                    indicator.setAttribute('rotation', '-90 0 0');
-                    indicator.setAttribute('width', '0.2');
-                    indicator.setAttribute('height', '0.2');
-                    indicator.setAttribute('depth', '0.1');
-                    indicator.setAttribute('material', 'color: red; opacity: 0.2; transparent: true');
-                    indicator.setAttribute('position', `0 0.5 0`);
-                    setTimeout(()=>{
-                        this.el.appendChild(indicator);
-                        this.applyDynamicBody();
-                    },1); // Asegúrate de que `this` esté correctamente vinculado.
-                }
-            }.bind(this));// Aquí usamos bind para asegurarnos de que `this` refiere al componente.
-
         },
+        //Funció de colisio
         handleCollision: function (evt) {
             let collidedEl = evt.detail.body.el;
             let isCooked = false;
@@ -1054,7 +1134,7 @@ function iniciarFuncionesJuego() {
                 esTallat = collidedEl.getAttribute("data-es-tallat") === 'true';
             }
 
-            if (isCooked || esTallat && this.items != this.requiredItems) {
+            if ((isCooked || esTallat) && this.items != this.requiredItems) {
                 this.indicators.forEach((indicator, index) => {
                     let indicatorPos = AFRAME.utils.coordinates.parse(indicator.getAttribute('position'));
                     let collidedPos = collidedEl.object3D.position;
@@ -1067,9 +1147,8 @@ function iniciarFuncionesJuego() {
                 });
             }
 
-            // Si hay suficientes ingredientes, convierte el pasta-checker en dynamic-body
             if (this.items === this.requiredItems) {
-                this.convertToDynamicBody();
+                this.applyDynamicBody();
             }
         },
         checkPosition: function (collidedPos, indicatorPos) {
@@ -1080,40 +1159,62 @@ function iniciarFuncionesJuego() {
         setIndicator: function (active, collidedEl, indicator) {
             if (active) {
                 indicator.setAttribute('material', 'color', 'green');
+                this.items++;
                 setTimeout(() => {
+                    //Eliminació del dynamic body per a borrar l'ingredient i creació d'un nou
                     if (collidedEl.getAttribute('dynamic-body')) {
                         collidedEl.removeAttribute('dynamic-body');
-                        collidedEl.removeAttribute('mixin');
-                        collidedEl.removeAttribute('grabbable');
-                        collidedEl.removeAttribute('hoverable');
-                        collidedEl.removeAttribute('reset');
-                        collidedEl.removeAttribute('obb-collider');
-
-                        this.items = 4;
                         console.log("no es dynamic ja l'ingredient" + this.items);
-                        elementoChoca = collidedEl;
-                        console.log(elementoChoca);
+
+                        let container = document.createElement('a-entity');
+                        let worldPosition = new THREE.Vector3();
+                        collidedEl.object3D.getWorldPosition(worldPosition);
+
+                        let localPosition = new THREE.Vector3();
+                        this.el.object3D.worldToLocal(localPosition.copy(worldPosition));
+                        localPosition.y += 0.05;
+                        container.object3D.position.copy(localPosition);
+                        console.log(container.getAttribute('position'));
+
+                        let material = collidedEl.firstChild.getAttribute('material');
+                        console.log(material);
+                        let color = material && material.color ? material.color : '#FF6347';
+                        console.log("COLOR " + color);
+                        for (let i = 0; i < 5; i++) {
+                            let piece = document.createElement('a-box');
+                            piece.setAttribute('width', '0.05');
+                            piece.setAttribute('height', '0.05');
+                            piece.setAttribute('depth', '0.05');
+                            const offsetX = Math.random() * 0.2 - 0.1;
+                            const offsetZ = Math.random() * 0.2 - 0.1;
+                            piece.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
+                            piece.setAttribute('rotation', '40 0 0');
+                            piece.setAttribute('material', `color: ${color}`);
+                            console.log(piece.getAttribute('material'));
+                            container.appendChild(piece);
+                        }
+
+                        container.setAttribute('data-es-tallat', 'true');
+                        container.setAttribute('rotation', collidedEl.getAttribute('rotation'));
+                        container.setAttribute('data-idInteractuable', collidedEl.getAttribute('data-idInteractuable'));
+                        container.setAttribute('data-nombre', collidedEl.getAttribute('data-nombre'));
+                        collidedEl.parentNode.removeChild(collidedEl);
+
+                        this.el.appendChild(container);
+
+                        console.log(collidedEl);
                     }
-                    console.log(collidedEl.getAttribute('position'));
                 }, 1);
             }
         },
-        convertToDynamicBody: function () {
-            console.log("Preparando para convertir a dynamic-body");
-            this.el.removeAttribute('static-body');
-        },
+        //Conversió a dynamic
         applyDynamicBody: function () {
-            console.log("Aplicando dynamic-body");
-            this.el.setAttribute('dynamic-body', '');
+            this.el.setAttribute('body', 'type: dynamic');
             this.el.setAttribute('class', 'grab');
             this.el.setAttribute('mixin', 'grabSarten');
-            this.el.setAttribute('reset', 'resetPosition: -5.3 0.57 -2.8');
-            console.log("Convertido a dynamic");
+            this.el.setAttribute('reset', 'resetPosition: -5.3 0.61 -2.8');
         }
-
     });
-
-
 
     //Cargar los glb con static body
     document.querySelector('#woodenTable').addEventListener('model-loaded', () => {
@@ -1156,7 +1257,7 @@ function iniciarFuncionesJuego() {
                     return; // Salir de la función si los datos no son un array
                 }
                 data.forEach((ingrediente, index) => {
-                    const positionX = -5.3 + index / 2; //+ 6;
+                    const positionX = index / 2; //+ 6;
                     const position = `${positionX} 1 -2.8`; //-5.3 0.57 -2.8 //positionX 1 -3
                     const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
                     const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/default.glb';
@@ -1732,7 +1833,8 @@ function iniciarFuncionesJuego() {
 
     AFRAME.registerComponent('puerta-horno', {
         schema: {
-            cookingTime: { type: 'number', default: 8000 } // Tiempo de cocción en milisegundos
+            cookingTime: { type: 'number', default: 5000 }, // Tiempo de cocción en milisegundos
+            tolerance: { type: 'number', default: 0.3 } // Tolerancia de colisión
         },
         init: function () {
             this.isCooking = false; // Estado inicial de cocción
@@ -1743,10 +1845,12 @@ function iniciarFuncionesJuego() {
             var puertaHorno = document.querySelector('.puerta-horno');
             this.cookingIndicator = document.getElementById('cooking-indicator');
             this.el.addEventListener('collide', this.handleCollision.bind(this));
+            this.humos = []; // Referencia al humo
 
             this.el.addEventListener('click', () => {
 
                 if (this.isFirstClick) {
+                    console.log("CLICK");
                     puertaHorno.setAttribute('animation', 'property: rotation; to: 90 -90 0; dur: 1000; easing: linear');
                     puertaHorno.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
                     this.isFirstClick = false;
@@ -1795,7 +1899,7 @@ function iniciarFuncionesJuego() {
                     // Verificar si la colisión está dentro de la tolerancia
                     if (this.checkPosition(cocaPos, indicatorPos)) {
                         console.log("La coca de trampó ha tocado el indicador de cocción.");
-                        if (!this.isCooking) {
+                        if (!this.isCooking && this.rotated) { // Solo comienza a cocinar si la puerta está cerrada
                             this.startCooking();
                         }
                     }
@@ -1813,22 +1917,65 @@ function iniciarFuncionesJuego() {
                 this.isCooking = true;
                 console.log("COCINANDO");
                 this.cookingIndicator.setAttribute('material', 'color: green; opacity: 0.5');
-                this.el.removeAttribute('dynamic-body');
-                this.el.setAttribute('static-body', '');
+                this.el.setAttribute('body', 'type: static-body');
                 this.pastaInOven = this.el;
+
+                // Añadir entidades de humo
+                this.createSmoke();
+
                 setTimeout(() => {
                     this.isCooking = false;
                     this.cookingIndicator.setAttribute('material', 'color: red; opacity: 0.2');
                     if (this.pastaInOven) {
-                        this.pastaInOven.removeAttribute('static-body');
-                        this.pastaInOven.setAttribute('dynamic-body', '');
+                        this.pastaInOven.setAttribute('body', 'type: dynamic-body');
+                        this.pastaInOven.setAttribute('color', '#AD7A3C');
                         this.pastaInOven = null;
                     }
+                    this.removeSmoke(); // Quitar el humo
                     console.log("SE HA COCINADO");
                 }, this.data.cookingTime);
             }
+        },
+        createSmoke: function () {
+            const positions = [
+                { x: -7.5, y: 2, z: -3 },
+                { x: -7, y: 2, z: -3 },
+                { x: -8, y: 2, z: -3 }
+            ];
+    
+            const sceneEl = document.querySelector('a-scene');
+    
+            positions.forEach(pos => {
+                const humo = document.createElement('a-entity');
+                humo.setAttribute('geometry', {
+                    primitive: 'sphere',
+                    radius: 0.5
+                });
+                humo.setAttribute('material', {
+                    color: '#666666',
+                    opacity: 0.7,
+                    transparent: true
+                });
+                humo.setAttribute('position', `${pos.x} ${pos.y} ${pos.z}`);
+                humo.setAttribute('animation', {
+                    property: 'position',
+                    to: `${pos.x} ${pos.y + 0.5} ${pos.z}`,
+                    loop: true,
+                    dur: 1000,
+                    dir: 'alternate'
+                });
+                sceneEl.appendChild(humo);
+                this.humos.push(humo);
+            });
+        },
+        removeSmoke: function () {
+            const sceneEl = document.querySelector('a-scene');
+            this.humos.forEach(humo => {
+                sceneEl.removeChild(humo);
+            });
+            this.humos = [];
         }
-    });
+        });
 
     AFRAME.registerComponent('foo', {
         init: function () {
@@ -1956,118 +2103,5 @@ function iniciarFuncionesJuego() {
     }
 }
 
-document.addEventListener('a-keyboard-update', updateInput);
-
-var input = '';
-
-
-function nuevaPartida() {
-    document.getElementById("selectPartidaMenu").setAttribute('visible', 'false');
-    document.getElementById("menuInicio").setAttribute('visible', 'true');
-    var selectPartidaMenu = document.getElementById("selectPartidaMenu");
-    while (selectPartidaMenu.firstChild) {
-        selectPartidaMenu.removeChild(selectPartidaMenu.firstChild);
-    }
-}
-
-function iniciarSesion(username) {
-    document.querySelector('#loginMenu').setAttribute('visible', 'false'); // Ocultar teclado
-    var loginMenu = document.getElementById("loginMenu");
-    while (loginMenu.firstChild) {
-        loginMenu.removeChild(loginMenu.firstChild);
-    }
-    document.querySelector('#selectPartidaMenu').setAttribute('visible', 'true'); // Mostrar menú de partida
-    console.log("Sesion iniciada, usuario:" + username)
-    localStorage.setItem('usuarioAutenticado', 'true');
-}
-
-function enviarNombreUsuario() {
-    var username = document.getElementById("inputField").getAttribute("value");
-    console.log(username);
-    // Verificar que el nombre de usuario no esté vacío
-    if (!username) {
-        alert("Por favor, introduce tu nombre de usuario");
-        return;
-    }
-    // Enviar el nombre de usuario al servidor para verificar si está repetido
-    $.ajax({
-        url: "/verificar-usuario",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ username: username }),
-        success: function (response) {
-            console.log(response);
-            if (response.existe) {
-                iniciarSesion(username);
-            } else {
-                // Si el nombre de usuario no está repetido en el servidor, continuar con el registro
-                guardarUsuario(username);
-            }
-        },
-        error: function (xhr, status, error) {
-            console.error("Error al verificar el nombre de usuario:", error);
-            alert("Error al verificar el nombre de usuario");
-        }
-    });
-}
-
-// Función para guardar el nombre de usuario en el servidor si no está repetido
-function guardarUsuario(username) {
-    $.ajax({
-        url: "/guardar-usuario",
-        method: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({ username: username }),
-        success: function (response) {
-            // Activar los controles WASD de la cámara
-
-            // Mostrar el panel de menu
-            iniciarSesion(username);
-        },
-        error: function (xhr, status, error) {
-            console.error("Error al guardar el nombre de usuario:", error);
-            alert("Error al guardar el nombre de usuario");
-        }
-    });
-}
-
-AFRAME.registerComponent('keyboard-input', {
-    init: function () {
-        const inputField = document.getElementById('inputField');
-
-        // Escucha el evento 'a-keyboard-update' para recibir actualizaciones del teclado
-        this.el.addEventListener('a-keyboard-update', (event) => {
-            const char = event.detail.char; // Obtiene el carácter de la tecla presionada
-            const action = event.detail.action; // Obtiene la acción (pulsación, retroceso, etc.)
-
-            // Si la acción es 'press', agrega el carácter al valor del campo de texto
-            if (action === 'press') {
-                console.log('Tecla presionada:', char);
-                console.log('Valor actual del campo de texto:', inputField.getAttribute('text').value);
-                inputField.setAttribute('text', 'value', inputField.getAttribute('text').value + char);
-                console.log('Nuevo valor del campo de texto:', inputField.getAttribute('text').value);
-            }
-        });
-    }
-});
-
-function updateInput(e) {
-    var code = parseInt(e.detail.code);
-    switch (code) {
-        case 8: // Backspace
-            input = input.slice(0, -1);
-            break;
-        case 13: // Enter
-            var inputField = document.querySelector('#inputField');
-            inputField.setAttribute('value', input);
-            input = ''; // Reset input value
-            enviarNombreUsuario();
-            return;
-        default:
-            input += e.detail.value;
-            break;
-    }
-    document.querySelector('#inputField').setAttribute('value', input + '_');
-}
 
 
