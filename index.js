@@ -103,8 +103,7 @@ app.post('/nuevaPartida', (req, res) => {
 
   const { nivel } = req.body;
   const usuarioNombre = req.session.usuario.nombre;
-
-  // Insertar nueva partida
+  // Insertar nova partida
   const insertPartidaQuery = 'INSERT INTO partida (NomNiv, NomUs) VALUES (?, ?)';
   connection.query(insertPartidaQuery, [nivel, usuarioNombre], (error, partidaResults) => {
     if (error) {
@@ -115,7 +114,7 @@ app.post('/nuevaPartida', (req, res) => {
     const nuevaPartidaId = partidaResults.insertId;
     req.session.partidaId = nuevaPartidaId;
 
-    // Inicializar los objetivos para la nueva partida
+    // Inicialitzar els objectius para la nueva partida
     const selectObjetivosQuery = 'SELECT IdObj FROM objectiu WHERE NomNiv = ?';
     connection.query(selectObjetivosQuery, [nivel], (error, objetivosResults) => {
       if (error) {
@@ -123,7 +122,6 @@ app.post('/nuevaPartida', (req, res) => {
         return res.status(500).json({ success: false, message: 'Error al obtener objetivos' });
       }
 
-      // Preparar inserción masiva en Partida_Objectiu
       const objetivosData = objetivosResults.map(obj => [nuevaPartidaId, obj.IdObj, false]);
       console.log(objetivosData);
       console.log(objetivosResults);
@@ -134,8 +132,7 @@ app.post('/nuevaPartida', (req, res) => {
           console.error('Error al insertar objetivos en partida:', error);
           return res.status(500).json({ success: false, message: 'Error al inicializar objetivos de la partida' });
         }
-
-        // Todo ha ido bien, enviar confirmación
+        //TOT OK
         res.json({ success: true, message: 'Partida y objetivos inicializados correctamente', partidaId: nuevaPartidaId });
       });
     });
@@ -152,14 +149,13 @@ app.get('/getPartidaId', (req, res) => {
 });
 
 app.get('/obtenerPartidas', (req, res) => {
-  // Verificar si el usuario está autenticado
+  // USUARI AUTENTICAT?
   if (!req.session.usuario || !req.session.usuario.nombre) {
     return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
   }
 
   const usuarioNombre = req.session.usuario.nombre;
 
-  // Consulta para obtener las partidas del usuario
   const query = 'SELECT IdPartida, NomNiv FROM partida WHERE NomUs = ?';
 
   connection.query(query, [usuarioNombre], (error, results) => {
@@ -168,17 +164,16 @@ app.get('/obtenerPartidas', (req, res) => {
       return res.status(500).json({ success: false, message: 'Error al obtener las partidas' });
     }
 
-    // Devolver las partidas encontradas
     res.json(results);
   });
 });
 
 app.post('/seleccionarPartida', (req, res) => {
-  const { idPartida } = req.body; // Asegúrate de recibir correctamente el idPartida del cuerpo de la solicitud
+  const { idPartida } = req.body;
   if (!req.session.usuario) {
     return res.status(401).json({ success: false, message: 'Usuario no autenticado' });
   }
-  req.session.partidaId = idPartida; // Almacenar idPartida en la sesión
+  req.session.partidaId = idPartida;
   res.json({ success: true, message: 'Partida seleccionada correctamente' });
 });
 
@@ -191,7 +186,6 @@ app.get('/ingredientes', (req, res) => {
 
   const idPartida = req.session.partidaId;
 
-  // Obtener el nivel asociado a la partida
   const queryNivel = 'SELECT NomNiv FROM partida WHERE IdPartida = ?';
   connection.query(queryNivel, [idPartida], (error, resultsNivel) => {
     if (error || resultsNivel.length === 0) {
@@ -201,7 +195,6 @@ app.get('/ingredientes', (req, res) => {
 
     const nomNiv = resultsNivel[0].NomNiv;
 
-    // Ajustar la consulta para incluir el estado EsTallat de la tabla Partida_Interactuable_Estado
     const queryIngredientes = `
       SELECT 
         i.IdInteractuable,

@@ -9,7 +9,6 @@
     <script src="js/aframe-keyboard.min.js"></script>
     <script src="js/jquery.min.js"></script>
     <link rel="icon" href="assets/gameIcon3.ico" type="image/x-icon">
-    <!-- <script src="js/aframe-physics-system.min.js"></script> -->
     <script src="js/aframe-physics-extras.min.js"></script>
     <script src="js/aframe-physics-system.js"></script>
     <script src="js/aframe-event-set-component.min.js"></script>
@@ -22,17 +21,9 @@
 <body>
     <a-scene keyboard-shortcuts="enterVR: false" id="escenaInicio" style="display: block;">
         <a-assets>
-            <a-entity id="audioEntity">
-                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1"
-                    positional="false"></a-sound>
-            </a-entity>
+            <a-sound id="soundInicio" src="url(assets/sounds/intro.mp3)" loop="true" volume="1"
+                positional="false"></a-sound>
             <img src="assets/sky2.jpg" id="sky">
-            <img id="city" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/city.jpg" crossorigin>
-            <img id="city-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-city.jpg"
-                crossorigin>
-            <img id="cubes" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/cubes.jpg" crossorigin>
-            <img id="cubes-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-cubes.jpg"
-                crossorigin>
             <img id="sechelt" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/sechelt.jpg" crossorigin>
             <img id="sechelt-thumb" src="https://cdn.aframe.io/360-image-gallery-boilerplate/img/thumb-sechelt.jpg"
                 crossorigin>
@@ -69,19 +60,22 @@
                                       colliderEndEventProperty: clearedEls;">
             </a-mixin>
 
-            <a-entity id="audioEntity">
-                <a-sound src="url(assets/sounds/intro.mp3)" autoplay="true" loop="true" volume="1"></a-sound>
-            </a-entity>
             <a-sound id="sound" src="assets/sounds/fallo.mp3" preload="auto"></a-sound>
             <a-sound id="house" src="assets/sounds/house_lo.mp3" preload="auto"></a-sound>
             <a-sound id="doorSound" src="assets/sounds/door.mp3" preload="auto"></a-sound>
+            <a-sound id="frySound" src="assets/sounds/fry.mp3" preload="auto"></a-sound>
+            <a-sound id="cutSound" src="assets/sounds/corte.mp3" preload="auto"></a-sound>
+            <a-sound id="ovenSound" src="assets/sounds/horno.mp3" preload="auto"></a-sound>
+            <a-sound id="blenderSound" src="assets/sounds/batidora.mp3" preload="auto"></a-sound>
+            <a-sound id="ovenReady" src="assets/sounds/hornoListo.mp3" preload="auto"></a-sound>
+
             <img id="tick-verde" src="assets/images/tick-verde.png">
-            <img id="x-roja" src="assets/images/CheckmarkIcon.png">
+            <img id="x-roja" src="assets/images/x-roja.png">
             <img src="assets/sky2.jpg" id="sky">
             <img id="textura-madera" src="assets/madera.jpg">
 
         </a-assets>
-        <a-camera id="camera" look-controls wasd-controls="enabled: true" position="0 1.6 2">
+        <a-camera id="rig" look-controls wasd-controls="enabled: true" position="0 1.6 2">
             <a-cursor id="cursor"
                 animation__click="property: scale; from: 0.1 0.1 0.1; to: 1 1 1; easing: easeInCubic; dur: 150; startEvents: click"
                 animation__clickreset="property: scale; to: 0.1 0.1 0.1; dur: 1; startEvents: animationcomplete__click"
@@ -152,15 +146,15 @@
             </a-entity>
 
             <a-entity id="menuInicio" position="0 1.5 -2" visible="false">
-                <a-plane color="gray" width="6" height="6" opacity="0.8" rotation="0 0 0"></a-plane>
-                <a-text value="Menu de Inicio" color="white" align="center" position="0 1.5 0.05"
+                <a-plane color="black" width="6" height="6" rotation="0 0 0"></a-plane>
+                <a-text value="Elige el nivel" color="white" align="center" position="0 1.5 0.05"
                     scale="2 2 2"></a-text>
                 <a-entity position="0 0.8 0">
-                    <a-box id="botonTumbet" color="blue" width="2" height="1" depth="0.1" position="0 -0.3 0.05">
+                    <a-box id="botonTumbet" color="#0C9" width="4" height="1" depth="0.1" position="0 -0.3 0.05">
                         <a-text value="Tumbet" color="white" align="center" scale="2 2 2" position="0 0 0.1"></a-text>
                     </a-box>
-                    <a-box id="botonCocaDeTrampo" color="blue" width="2" height="1" depth="0.1" position="0 -1.5 0.05">
-                        <a-text value="Coca de trampó" color="white" align="center" scale="2 2 2"
+                    <a-box id="botonCocaDeTrampo" color="#0C9" width="4" height="1" depth="0.1" position="0 -1.5 0.05">
+                        <a-text value="Coca de trampo" color="white" align="center" scale="2 2 2"
                             position="0 0 0.1"></a-text>
                     </a-box>
                 </a-entity>

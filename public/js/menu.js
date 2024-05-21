@@ -7,6 +7,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const botonBajarVolumen = document.querySelector('#botonBajarVolumen');
     const logoutButton = document.querySelector('#botonSalir');
 
+    const sound = document.querySelector('#soundInicio');
+
+    if (sound) {
+        sound.addEventListener('sound-loaded', function () {
+            sound.components.sound.playSound();
+        });
+    }
+
+
     document.querySelector('a-scene').addEventListener('loaded', function () {
         var botonTumbet = document.querySelector('#botonTumbet');
         var botonCocaDeTrampo = document.querySelector('#botonCocaDeTrampo');
@@ -32,7 +41,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         function ajustarVolumen(cambio) {
-            const audioEntity = document.querySelector('#audioEntity a-sound');
+            const audioEntity = document.querySelector('#soundInicio');
             let nuevoVolumen = parseFloat(audioEntity.getAttribute('volume')) + cambio;
             nuevoVolumen = Math.max(0, Math.min(1, nuevoVolumen));
             audioEntity.setAttribute('volume', nuevoVolumen);
@@ -170,58 +179,49 @@ function cambiarEscena(nombreNivel) {
 
 function cargarNuevoNivel(escena, nombreNivel) {
 
+    const sound = document.querySelector('#soundInicio');
+
+    function fadeOutSound(sound, duration) {
+        const initialVolume = sound.getAttribute('volume');
+        const step = initialVolume / (duration / 50); // Ajusta el paso en función de la duración y el intervalo de tiempo
+
+        function decreaseVolume() {
+            const currentVolume = sound.getAttribute('volume');
+            if (currentVolume > 0) {
+                const newVolume = Math.max(0, currentVolume - step);
+                sound.setAttribute('volume', newVolume); // Disminuye el volumen
+                setTimeout(decreaseVolume, 50); // Llama de nuevo después de 50 ms
+            } else {
+                sound.components.sound.stopSound(); // Detiene el sonido cuando el volumen llega a 0
+            }
+        }
+
+        decreaseVolume();
+    }
+
+    setTimeout(function () {
+        if (sound) {
+            fadeOutSound(sound, 3000);
+        }
+    }, 3000);
     const sky = document.createElement('a-sky');
     sky.setAttribute('id', 'image-360');
-    sky.setAttribute('src', '#city');
+    sky.setAttribute('src', '#sechelt');
     sky.setAttribute('animation__fade', 'property: components.material.material.color; type: color; from: #FFF; to: #000; dur: 300; startEvents: fade');
     sky.setAttribute('animation__fadeback', 'property: components.material.material.color; type: color; from: #000; to: #FFF; dur: 300; startEvents: animationcomplete__fade');
     escena.appendChild(sky);
 
-    let endScreen = document.createElement('a-plane');
-    endScreen.setAttribute('id', 'endScreen');
-    endScreen.setAttribute('visible', 'false');
-    endScreen.setAttribute('position', '10 10 10');
-    endScreen.setAttribute('rotation', '0 0 0');
-    endScreen.setAttribute('width', '4');
-    endScreen.setAttribute('height', '2');
-    endScreen.setAttribute('color', '#FFFFFF');
+    const rig = document.querySelector('#rig');
+    const leftHand = rig.querySelector('#lhand');
+    if (leftHand) {
+        leftHand.parentNode.removeChild(leftHand);
+    }
 
-    let buttonBackground = document.createElement('a-plane');
-    buttonBackground.setAttribute('color', '#CCCCCC');
-    buttonBackground.setAttribute('height', '0.4');
-    buttonBackground.setAttribute('width', '2');
-    buttonBackground.setAttribute('position', '0 -0.5 0.05');
-    buttonBackground.classList.add('clickable');
-
-    let buttonText = document.createElement('a-text');
-    buttonText.setAttribute('value', 'Regresar a Inicio');
-    buttonText.setAttribute('align', 'center');
-    buttonText.setAttribute('color', '#000000');
-    buttonText.setAttribute('position', '0 0 0.1');
-    buttonBackground.addEventListener('click', function () {
-        window.location.href = 'index.html';
-    });
-
-    // Añadir el texto al fondo del botón
-    buttonBackground.appendChild(buttonText);
-
-    // Añadir el botón al endScreen
-    endScreen.appendChild(buttonBackground);
-
-    // Crear el texto para la pantalla de finalización
-    let text = document.createElement('a-text');
-    text.setAttribute('value', 'Partida Finalizada - Tumbet realizado');
-    text.setAttribute('align', 'center');
-    text.setAttribute('color', '#000000');
-    text.setAttribute('width', '6');
-    text.setAttribute('position', '0 0 0.1'); // Posiciona el texto ligeramente hacia delante para evitar z-fighting
-
-    // Añadir el texto al plano
-    endScreen.appendChild(text);
-
-    // Añadir el plano a la escena
-    escena.appendChild(endScreen);
-    // Configurar y añadir la entidad de la cámara y el sistema de movimiento
+    const newLeftHand = document.createElement('a-entity');
+    newLeftHand.setAttribute('id', 'lhand');
+    newLeftHand.setAttribute('mixin', 'physics-hands');
+    newLeftHand.setAttribute('hand-controls', 'hand: left; color: #ffcccc');
+    rig.querySelector('a-entity').appendChild(newLeftHand);
 
     // Añadir iluminación ambiental y direccional
     const ambientLight = document.createElement('a-light');
@@ -237,15 +237,28 @@ function cargarNuevoNivel(escena, nombreNivel) {
     escena.appendChild(directionalLight);
 
     cookingIndicator = document.createElement('a-box'); // Indicador de cocción
-    cookingIndicator.setAttribute('position', '-7.5 1 -2.8'); // Ajusta la posición según sea necesario
+    cookingIndicator.setAttribute('position', '-7.5 1 -2.9'); // Ajusta la posición según sea necesario
     cookingIndicator.setAttribute('id', 'cooking-indicator'); // Ajusta la posición según sea necesario
-    cookingIndicator.setAttribute('width', '0.8');
+    cookingIndicator.setAttribute('width', '0.9');
     cookingIndicator.setAttribute('height', '0.1');
-    cookingIndicator.setAttribute('depth', '0.4');
+    cookingIndicator.setAttribute('depth', '0.5');
     cookingIndicator.setAttribute('material', 'color: red; opacity: 0.2; transparent: true');
     cookingIndicator.setAttribute('class', 'cooking-indicator');
     cookingIndicator.setAttribute('static-body', '');
     escena.appendChild(cookingIndicator);
+
+    emplatarCoca = document.createElement('a-box'); // Indicador de cocción
+    emplatarCoca.setAttribute('position', `-9.2 0.4 -2.8`);
+    emplatarCoca.setAttribute('rotation', '0 0 0');
+    emplatarCoca.setAttribute('width', '1');
+    emplatarCoca.setAttribute('height', '0.1');
+    emplatarCoca.setAttribute('depth', '0.8');
+    emplatarCoca.setAttribute('id', 'emplatarCoca');
+    emplatarCoca.setAttribute('material', 'color: red; opacity: 0.3; transparent: true');
+    emplatarCoca.setAttribute('visible', 'true');
+    emplatarCoca.setAttribute('emplatar-checker', 'tolerance: 0.3');
+    emplatarCoca.setAttribute('static-body', '');
+    escena.appendChild(emplatarCoca);
 
     // Añadir el suelo y el techo
     const floor = document.createElement('a-entity');
@@ -374,7 +387,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
     kitchenKnife.setAttribute('mixin', 'grabLarge');
     kitchenKnife.setAttribute('class', 'grab');
     kitchenKnife.setAttribute('gltf-model', 'url(assets/kitchen_knife.glb)');
-    kitchenKnife.setAttribute('position', '1 0.54 -3');
+    kitchenKnife.setAttribute('position', '2 0.54 -3');
     kitchenKnife.setAttribute('rotation', '0 0 0');
     kitchenKnife.setAttribute('scale', '1.2 1.2 1.2');
     kitchenKnife.setAttribute('reset', 'resetPosition: 2 1.2 -3');
@@ -393,8 +406,8 @@ function cargarNuevoNivel(escena, nombreNivel) {
     escena.appendChild(fryingPan);
 
     // Añadir funcionalidades de cambio de fondo
-    const fondoSelector = document.createElement('a-entity');
-    fondoSelector.setAttribute('position', '-14.4 1 9');
+    /*const fondoSelector = document.createElement('a-entity');
+    fondoSelector.setAttribute('position', '-10 1 9');
     fondoSelector.setAttribute('rotation', '0 90 0');
 
     const enlaceCambioFondo = [
@@ -407,6 +420,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
     enlaceCambioFondo.forEach(link => {
         const enlace = document.createElement('a-entity');
         enlace.setAttribute('class', 'link');
+        enlace.setAttribute('static-body', '');
         enlace.setAttribute('geometry', 'primitive: plane; height: 1; width: 1');
         enlace.setAttribute('material', 'shader: flat; src: ' + link.src);
         enlace.setAttribute('event-set__mouseenter', 'scale: 1.2 1.2 1');
@@ -418,55 +432,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
         }
         fondoSelector.appendChild(enlace);
     });
-    escena.appendChild(fondoSelector);
-
-    // Asegurarse de que los scripts y componentes necesarios están cargados
-    // Esto puede incluir la redefinición de componentes A-Frame o la integración de scripts externos
-    if (!AFRAME.components['phase-shift']) {
-        AFRAME.registerComponent('phase-shift', {
-            init: function () {
-                this.el.addEventListener('gripdown', () => {
-                    this.el.setAttribute('collision-filter', { collisionForces: true });
-                });
-                this.el.addEventListener('gripup', () => {
-                    this.el.setAttribute('collision-filter', { collisionForces: false });
-                });
-            }
-        });
-    }
-
-    // Implementar controles adicionales para la interacción
-    const controlPanel = document.createElement('a-entity');
-    controlPanel.setAttribute('position', '0 1.5 -3');
-
-    /*const backButton = document.createElement('a-plane');
-    backButton.setAttribute('id', 'backButton');
-    backButton.setAttribute('position', '0 0 -0.1'); // Ajustado ligeramente hacia atrás para evitar clipping
-    backButton.setAttribute('height', '0.5');
-    backButton.setAttribute('width', '1');
-    backButton.setAttribute('material', 'color: red');
-    backButton.setAttribute('text', 'value: Back; color: white; align: center; width: 4;');
-    backButton.setAttribute('class', 'clickable');
-    backButton.addEventListener('click', function () {
-        // función para manejar el regreso al menú principal o estado anterior
-    });
-    controlPanel.appendChild(backButton);*/
-
-    escena.appendChild(controlPanel);
-
-    // Añadir funcionalidades interactivas adicionales según sea necesario
-    const infoButton = document.createElement('a-plane');
-    infoButton.setAttribute('id', 'infoButton');
-    infoButton.setAttribute('position', '1 1.5 -3');
-    infoButton.setAttribute('height', '0.5');
-    infoButton.setAttribute('width', '1');
-    infoButton.setAttribute('material', 'color: blue');
-    infoButton.setAttribute('text', 'value: Info; color: white; align: center; width: 4;');
-    infoButton.setAttribute('class', 'clickable');
-    infoButton.addEventListener('click', function () {
-        // función para mostrar información adicional o ayuda al usuario
-    });
-    controlPanel.appendChild(infoButton);
+    escena.appendChild(fondoSelector);*/
 
     // Lateral izquierdo de la encimera
     const leftSide = document.createElement('a-box');
@@ -535,18 +501,18 @@ function cargarNuevoNivel(escena, nombreNivel) {
         devallPasta.setAttribute('color', 'black');
         devallPasta.setAttribute('width', '1.6');
         devallPasta.setAttribute('height', '0.9');
-        devallPasta.setAttribute('position', '-5.3 0.54 -2.8');
+        devallPasta.setAttribute('position', '-5.25 0.54 -2.8');
         devallPasta.setAttribute('rotation', '-90 0 0');
         const pastaCoca = document.createElement('a-box');
         pastaCoca.setAttribute('id', 'pastaCoca');
         pastaCoca.setAttribute('position', '-5.3 0.57 -2.8');
-        pastaCoca.setAttribute('width', '1.4');
+        pastaCoca.setAttribute('width', '1.2');
         pastaCoca.setAttribute('height', '0.05');
-        pastaCoca.setAttribute('depth', '0.75');
+        pastaCoca.setAttribute('depth', '0.6');
         pastaCoca.setAttribute('color', '#FFE6A3');
         pastaCoca.setAttribute('body', 'type: static');
         pastaCoca.setAttribute('pasta-checker', 'tolerance: 0.2');
-        pastaCoca.setAttribute('puerta-horno', 'tolerance: 0.2');
+        pastaCoca.setAttribute('horno', 'tolerance: 0.2');
         escena.appendChild(pastaCoca);
         escena.appendChild(devallPasta);
     }
@@ -555,13 +521,19 @@ function cargarNuevoNivel(escena, nombreNivel) {
     if (nombreNivel === 'Tumbet') {
         const textoBandeja = document.createElement('a-entity');
         textoBandeja.setAttribute('text', 'value: Coloca los ingredientes cocinados para emplatar; color: white; align: center; width: 2;');
-        textoBandeja.setAttribute('position', '-5.5 2 -3.3');
+        textoBandeja.setAttribute('position', '-5.5 2 -3');
         escena.appendChild(textoBandeja);
     } else {
         const textoBandeja = document.createElement('a-entity');
         textoBandeja.setAttribute('text', 'value: Coloca los ingredientes cortados (sin cocinar) encima de la pasta; color: white; align: center; width: 2;');
-        textoBandeja.setAttribute('position', '-5.5 2 -3.3');
+        textoBandeja.setAttribute('position', '-5.5 2 -3');
+
+        const textoEmplatar = document.createElement('a-entity');
+        textoEmplatar.setAttribute('text', 'value: Coloca la coca de trampo una vez cocinada para terminar la partida; color: white; align: center; width: 2;');
+        textoEmplatar.setAttribute('position', '-9.3 1.5 -2.9');
+
         escena.appendChild(textoBandeja);
+        escena.appendChild(textoEmplatar);
     }
 
 
@@ -592,7 +564,7 @@ function cargarNuevoNivel(escena, nombreNivel) {
 
     // Crear el código HTML para el horno
     const hornoHTML = `
-        <a-entity id="horno" position="-7.5 1 -3" scale="0.7 0.7 0.7" puerta-horno class="clickable">
+        <a-entity id="horno" position="-7.5 1.1 -3.2" scale="0.8 0.8 0.8" horno>
             <a-box id="arribaHorno" width="2" height="0.1" depth="1" color="black" position="0 1 0.5"
                 rotation="0 0 0"></a-box>
             <a-box id="detrasHorno" width="2" height="0.1" depth="2" color="black" position="0 0 0"
@@ -600,10 +572,9 @@ function cargarNuevoNivel(escena, nombreNivel) {
             <a-box id="bajoHorno" width="2" height="0.1" depth="1" color="black" position="0 -1 0.5"
                 rotation="0 0 0"></a-box>
             <a-box id="puertaHorno" class="puerta-horno" width="2" height="0.1" depth="2" color="grey"
-                transparent="true" position="0 0 1" opacity="0.5" rotation="90 0 0"
-                aabb-collider="objects: .collidable; interval: 1000">
-                <!-- Pomo -->
-
+                transparent="true" position="0 0 1" opacity="0.5" rotation="90 0 0" static-body horno>
+                <a-box id="pomo" width="0.1" height="0.4" depth="0.2" color="white" position="0.7 0.1 -0.3"
+                    rotation="90 0 0"></a-box>
             </a-box>
             <a-box id="derHorno" width="1" height="2" depth="0.1" color="black" position="1 0 0.5"
                 rotation="0 90 0"></a-box>
@@ -755,9 +726,9 @@ function iniciarFuncionesJuego() {
     const botonSubirVolumen = document.querySelector('#botonSubirVolumen');
     const botonBajarVolumen = document.querySelector('#botonBajarVolumen');
     const fireSource = document.getElementById('fireSource');
-    let fireCreated = false; // Indicador de si el anillo de fuego está activo
-    let fireBoxes = []; // Almacenar las cajas de fuego para poder eliminarlas
-    // En el archivo JavaScript que se carga con inicio.html
+    let fireCreated = false;
+    let fireBoxes = [];
+
 
     const usuarioAutenticado = localStorage.getItem('usuarioAutenticado');
     console.log(usuarioAutenticado);
@@ -862,6 +833,7 @@ function iniciarFuncionesJuego() {
             this.el.addEventListener('collide', this.handleCollision.bind(this));
             this.progress = null;
             this.ingredient = null;
+            this.frySound = document.querySelector('#frySound');
         },
 
         tick: function () {
@@ -918,6 +890,10 @@ function iniciarFuncionesJuego() {
 
         startCooking: function () {
             if (!this.progress) {
+
+                if (this.frySound) {
+                    this.frySound.components.sound.playSound();
+                }
                 this.progress = document.createElement('a-box');
                 this.progress.setAttribute('width', '0.02');
                 this.progress.setAttribute('height', '0.05');
@@ -937,6 +913,9 @@ function iniciarFuncionesJuego() {
 
                 if (newWidth >= 0.2) {
                     clearInterval(interval);
+                    if (this.frySound) {
+                        this.frySound.components.sound.stopSound();
+                    }
                     this.el.removeChild(this.progress); // Elimina la barra de progreso
                     this.progress = null;
                     this.data.hasIngredient = false;
@@ -1026,32 +1005,134 @@ function iniciarFuncionesJuego() {
                     bowl.removeObject3D('semicircle');
                 }
                 bowl.removeAttribute('tomate-salsa');
+
+                fetch('/api/completarObjetivo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idObj: 4,
+                        completado: true
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Objetivo 4 completado correctamente');
+
+                            const objUI = document.querySelector('[data-objetivo="4"]');
+                            if (objUI) {
+                                const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                                iconoEstadoEl.setAttribute('src', '#tick-verde');
+                            }
+                        } else {
+                            console.error('Error al completar el objetivo:', data.message);
+                        }
+                    }).catch(error => {
+                        console.error('Error en la solicitud de completar objetivo:', error);
+                    });
+                this.checkTimer();
                 setTimeout(() => {
                     this.showEndScreen();
                 }, 3000);
             }
         },
         showEndScreen: function () {
-            let endScreen = document.getElementById('endScreen');
-            endScreen.setAttribute('visible', 'true');  // Hacer visible la pantalla de finalización
+            fetch(`/obtenerObjetivos`)
+                .then(response => response.json())
+                .then(objetivos => {
+                    const sceneEl = document.querySelector('a-scene');
 
-            let cameraRig = document.getElementById('rig');
-            let screenPosition = endScreen.getAttribute('position');
+                    // Crear pantalla de finalización
+                    const endScreenTumbet = document.createElement('a-plane');
+                    endScreenTumbet.setAttribute('id', 'endScreenTumbet');
+                    endScreenTumbet.setAttribute('visible', 'true');
+                    endScreenTumbet.setAttribute('position', '10 -10 -10');
+                    endScreenTumbet.setAttribute('width', '4');
+                    endScreenTumbet.setAttribute('height', '2');
+                    endScreenTumbet.setAttribute('color', '#FFF');
 
-            let newPosition = {
-                x: screenPosition.x,
-                y: screenPosition.y,
-                z: screenPosition.z + 2
-            };
+                    const endText = document.createElement('a-text');
+                    endText.setAttribute('value', 'Partida Finalizada');
+                    endText.setAttribute('align', 'center');
+                    endText.setAttribute('color', '#000');
+                    endText.setAttribute('position', '0 0.5 0.1');
 
-            cameraRig.setAttribute('position', `${newPosition.x} ${newPosition.y} ${newPosition.z}`);
-            cameraRig.setAttribute('rotation', '0 0 0');
+                    endScreenTumbet.appendChild(endText);
 
-            this.disableControls();
+                    // Mostrar objetivos completados
+                    const endScreenObjetivos = document.createElement('a-plane');
+                    endScreenObjetivos.setAttribute('position', '14 -10 -8');
+                    endScreenObjetivos.setAttribute('rotation', '0 -60 0');
+                    endScreenObjetivos.setAttribute('width', '5.5');
+                    endScreenObjetivos.setAttribute('height', '4');
+                    const textoFinalObjetivos = document.createElement('a-text');
+                    textoFinalObjetivos.setAttribute('value', 'Objetivos Realizados');
+                    textoFinalObjetivos.setAttribute('align', 'center');
+                    textoFinalObjetivos.setAttribute('color', '#000');
+                    textoFinalObjetivos.setAttribute('position', `0 1.2 0.1`);
+                    objetivos.forEach((objetivo, index) => {
+                        const objetivoText = document.createElement('a-text');
+                        objetivoText.setAttribute('value', `${objetivo.NomObj}`);
+                        objetivoText.setAttribute('align', 'center');
+                        objetivoText.setAttribute('color', '#000');
+                        objetivoText.setAttribute('position', `-0.8 ${0.6 - index * 0.3} 0.1`);
+                        objetivoText.setAttribute('width', '4');
+                        endScreenObjetivos.appendChild(objetivoText);
+                        const iconoEstadoEl = document.createElement('a-image');
+                        iconoEstadoEl.className = 'icono-estado';
+                        iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
+                        iconoEstadoEl.setAttribute('position', `2 ${0.6 - index * 0.3} 0.1`);
+                        iconoEstadoEl.setAttribute('height', '0.3');
+                        iconoEstadoEl.setAttribute('width', '0.3');
+                        endScreenObjetivos.appendChild(iconoEstadoEl);
+                    });
+                    endScreenObjetivos.appendChild(textoFinalObjetivos);
 
-            this.disableInteractions();
+                    const retryButton = document.createElement('a-plane');
+                    retryButton.setAttribute('position', '0 -0.5 0.1');
+                    retryButton.setAttribute('width', '2');
+                    retryButton.setAttribute('height', '0.5');
+                    retryButton.setAttribute('color', '#CCC');
+                    retryButton.classList.add('clickable');
+                    retryButton.addEventListener('click', () => {
+                        window.location.href = 'index.html'; // Redirige al inicio
+                    });
 
-            this.stopFootsteps();
+                    const retryText = document.createElement('a-text');
+                    retryText.setAttribute('value', 'Volver al Inicio');
+                    retryText.setAttribute('align', 'center');
+                    retryText.setAttribute('color', '#000');
+                    retryText.setAttribute('position', '0 0 0.1');
+
+                    retryButton.appendChild(retryText);
+                    endScreenTumbet.appendChild(retryButton);
+
+                    sceneEl.appendChild(endScreenTumbet);
+                    sceneEl.appendChild(endScreenObjetivos);
+                    const cameraRig = document.getElementById('rig');
+                    cameraRig.setAttribute('position', '10 -11 -8'); // Ajustar la posición del rig
+
+                    // Remover la mano izquierda y añadir el láser
+                    const leftHand = cameraRig.querySelector('#lhand');
+                    if (leftHand) {
+                        leftHand.parentNode.removeChild(leftHand);
+                    }
+
+                    const newLeftHand = document.createElement('a-entity');
+                    newLeftHand.setAttribute('id', 'lhand');
+                    newLeftHand.setAttribute('laser-controls', 'hand: left');
+                    newLeftHand.setAttribute('raycaster', 'far: 5');
+                    newLeftHand.setAttribute('line', 'color: red; opacity: 0.5');
+                    cameraRig.querySelector('a-entity').appendChild(newLeftHand);
+
+                    this.disableControls();
+
+                    this.disableInteractions();
+
+                    this.stopFootsteps();
+                })
+                .catch(error => console.error('Error al obtener los objetivos:', error));
         },
 
         disableControls: function () {
@@ -1089,6 +1170,38 @@ function iniciarFuncionesJuego() {
                 collidedEl.removeAttribute('dynamic-body');
                 collidedEl.setAttribute('static-body', '');
             }
+        },
+        checkTimer: function () {
+            const timerElement = document.querySelector('#timer');
+            const timerValue = timerElement.getAttribute('text').value;
+
+            if (timerValue !== '0:00') {
+                fetch('/api/completarObjetivo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idObj: 15,
+                        completado: true
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Objetivo 15 completado correctamente');
+
+                            const objUI = document.querySelector('[data-objetivo="15"]');
+                            if (objUI) {
+                                const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                                iconoEstadoEl.setAttribute('src', '#tick-verde');
+                            }
+                        } else {
+                            console.error('Error al completar el objetivo:', data.message);
+                        }
+                    }).catch(error => {
+                        console.error('Error en la solicitud de completar objetivo:', error);
+                    });
+            }
         }
     });
 
@@ -1112,6 +1225,7 @@ function iniciarFuncionesJuego() {
                 }
                 indicator.setAttribute('rotation', '-90 0 0');
                 indicator.setAttribute('width', '0.2');
+                indicator.setAttribute('data-ocupat', 'false');
                 indicator.setAttribute('height', '0.2');
                 indicator.setAttribute('depth', '0.1');
                 indicator.setAttribute('material', 'color: blue; opacity: 0.2; transparent: true');
@@ -1136,13 +1250,14 @@ function iniciarFuncionesJuego() {
 
             if ((isCooked || esTallat) && this.items != this.requiredItems) {
                 this.indicators.forEach((indicator, index) => {
-                    let indicatorPos = AFRAME.utils.coordinates.parse(indicator.getAttribute('position'));
-                    let collidedPos = collidedEl.object3D.position;
-                    if (this.checkPosition(collidedPos, indicatorPos)) {
-                        this.setIndicator(true, collidedEl, indicator);
-                        console.log(this.items);
-                    } else {
-                        this.setIndicator(false, collidedEl, indicator);
+                    if (indicator.getAttribute('data-ocupat') === 'false') {
+                        let indicatorPos = AFRAME.utils.coordinates.parse(indicator.getAttribute('position'));
+                        let collidedPos = collidedEl.object3D.position;
+                        if (this.checkPosition(collidedPos, indicatorPos)) {
+                            this.setIndicator(true, collidedEl, indicator);
+                        } else {
+                            this.setIndicator(false, collidedEl, indicator);
+                        }
                     }
                 });
             }
@@ -1159,6 +1274,7 @@ function iniciarFuncionesJuego() {
         setIndicator: function (active, collidedEl, indicator) {
             if (active) {
                 indicator.setAttribute('material', 'color', 'green');
+                indicator.setAttribute('data-ocupat', 'true');
                 this.items++;
                 setTimeout(() => {
                     //Eliminació del dynamic body per a borrar l'ingredient i creació d'un nou
@@ -1199,9 +1315,7 @@ function iniciarFuncionesJuego() {
                         container.setAttribute('data-idInteractuable', collidedEl.getAttribute('data-idInteractuable'));
                         container.setAttribute('data-nombre', collidedEl.getAttribute('data-nombre'));
                         collidedEl.parentNode.removeChild(collidedEl);
-
                         this.el.appendChild(container);
-
                         console.log(collidedEl);
                     }
                 }, 1);
@@ -1212,9 +1326,232 @@ function iniciarFuncionesJuego() {
             this.el.setAttribute('body', 'type: dynamic');
             this.el.setAttribute('class', 'grab');
             this.el.setAttribute('mixin', 'grabSarten');
-            this.el.setAttribute('reset', 'resetPosition: -5.3 0.61 -2.8');
+            this.el.setAttribute('reset', 'resetPosition: -7.5 1 -2.9');
         }
     });
+
+    AFRAME.registerComponent('emplatar-checker', {
+        schema: {
+            tolerance: { type: 'number', default: 0.3 },
+        },
+        init: function () {
+            console.log("Componente emplatar-checker inicializado");
+            this.indicator = document.querySelector('#emplatarCoca');
+            this.el.addEventListener('collide', this.handleCollision.bind(this));
+        },
+        handleCollision: function (evt) {
+            let collidedEl = evt.detail.body.el;
+            let isCooked = collidedEl.getAttribute('data-pasta-cooked') === 'true';
+            if (collidedEl.getAttribute('id') === 'pastaCoca' && isCooked) {
+                let indicatorPos = AFRAME.utils.coordinates.parse(this.indicator.getAttribute('position'));
+                let collidedPos = collidedEl.object3D.position;
+                if (this.checkPosition(collidedPos, indicatorPos)) {
+                    this.setIndicator(true, collidedEl, this.indicator);
+                } else {
+                    this.setIndicator(false, collidedEl, this.indicator);
+                }
+            }
+        },
+        showEndScreen: function () {
+            fetch(`/obtenerObjetivos`)
+                .then(response => response.json())
+                .then(objetivos => {
+                    const sceneEl = document.querySelector('a-scene');
+
+                    // Crear pantalla de finalización
+                    const endScreenCoca = document.createElement('a-plane');
+                    endScreenCoca.setAttribute('id', 'endScreenCoca');
+                    endScreenCoca.setAttribute('visible', 'true');
+                    endScreenCoca.setAttribute('position', '10 -10 -10');
+                    endScreenCoca.setAttribute('width', '4');
+                    endScreenCoca.setAttribute('height', '2');
+                    endScreenCoca.setAttribute('color', '#FFF');
+
+                    const endText = document.createElement('a-text');
+                    endText.setAttribute('value', 'Partida Finalizada');
+                    endText.setAttribute('align', 'center');
+                    endText.setAttribute('color', '#000');
+                    endText.setAttribute('position', '0 0.5 0.1');
+
+                    endScreenCoca.appendChild(endText);
+
+                    // Mostrar objetivos completados
+                    const endScreenObjetivos = document.createElement('a-plane');
+                    endScreenObjetivos.setAttribute('position', '14 -10 -8');
+                    endScreenObjetivos.setAttribute('rotation', '0 -60 0');
+                    endScreenObjetivos.setAttribute('width', '5.5');
+                    endScreenObjetivos.setAttribute('height', '4');
+                    const textoFinalObjetivos = document.createElement('a-text');
+                    textoFinalObjetivos.setAttribute('value', 'Objetivos Realizados');
+                    textoFinalObjetivos.setAttribute('align', 'center');
+                    textoFinalObjetivos.setAttribute('color', '#000');
+                    textoFinalObjetivos.setAttribute('position', `0 1.2 0.1`);
+                    objetivos.forEach((objetivo, index) => {
+                        const objetivoText = document.createElement('a-text');
+                        objetivoText.setAttribute('value', `${objetivo.NomObj}`);
+                        objetivoText.setAttribute('align', 'center');
+                        objetivoText.setAttribute('color', '#000');
+                        objetivoText.setAttribute('position', `-0.8 ${0.6 - index * 0.3} 0.1`);
+                        objetivoText.setAttribute('width', '4');
+                        endScreenObjetivos.appendChild(objetivoText);
+                        const iconoEstadoEl = document.createElement('a-image');
+                        iconoEstadoEl.className = 'icono-estado';
+                        iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
+                        iconoEstadoEl.setAttribute('position', `2 ${0.6 - index * 0.3} 0.1`);
+                        iconoEstadoEl.setAttribute('height', '0.3');
+                        iconoEstadoEl.setAttribute('width', '0.3');
+                        endScreenObjetivos.appendChild(iconoEstadoEl);
+                    });
+                    endScreenObjetivos.appendChild(textoFinalObjetivos);
+
+                    const retryButton = document.createElement('a-plane');
+                    retryButton.setAttribute('position', '0 -0.5 0.1');
+                    retryButton.setAttribute('width', '2');
+                    retryButton.setAttribute('height', '0.5');
+                    retryButton.setAttribute('color', '#CCC');
+                    retryButton.classList.add('clickable');
+                    retryButton.addEventListener('click', () => {
+                        window.location.href = 'index.html'; // Redirige al inicio
+                    });
+
+                    const retryText = document.createElement('a-text');
+                    retryText.setAttribute('value', 'Volver al Inicio');
+                    retryText.setAttribute('align', 'center');
+                    retryText.setAttribute('color', '#000');
+                    retryText.setAttribute('position', '0 0 0.1');
+
+                    retryButton.appendChild(retryText);
+                    endScreenCoca.appendChild(retryButton);
+
+                    sceneEl.appendChild(endScreenCoca);
+                    sceneEl.appendChild(endScreenObjetivos);
+
+
+                    const cameraRig = document.getElementById('rig');
+                    cameraRig.setAttribute('position', '10 -11 -8'); // Ajustar la posición del rig
+
+                    // Remover la mano izquierda y añadir el láser
+                    const leftHand = cameraRig.querySelector('#lhand');
+                    if (leftHand) {
+                        leftHand.parentNode.removeChild(leftHand);
+                    }
+
+                    const newLeftHand = document.createElement('a-entity');
+                    newLeftHand.setAttribute('id', 'lhand');
+                    newLeftHand.setAttribute('laser-controls', 'hand: left');
+                    newLeftHand.setAttribute('raycaster', 'far: 5');
+                    newLeftHand.setAttribute('line', 'color: red; opacity: 0.5');
+                    cameraRig.querySelector('a-entity').appendChild(newLeftHand);
+
+                    this.disableControls();
+
+                    this.disableInteractions();
+
+                    this.stopFootsteps();
+                })
+                .catch(error => console.error('Error al obtener los objetivos:', error));
+
+        },
+
+        disableControls: function () {
+            let cameraRig = document.getElementById('rig');
+            if (cameraRig.components['movement-controls']) {
+                cameraRig.components['movement-controls'].data.enabled = false;
+            }
+            let camera = cameraRig.querySelector('[camera]');
+            if (camera.components['wasd-controls']) {
+                camera.components['wasd-controls'].pause();
+            }
+        },
+
+        disableInteractions: function () {
+            document.querySelectorAll('.clickable').forEach(function (clickable) {
+                clickable.classList.remove('clickable');
+            });
+        },
+
+        stopFootsteps: function () {
+            let footsteps = document.getElementById('footsteps');
+            if (footsteps.components.sound) {
+                footsteps.components.sound.stopSound();
+            }
+        },
+
+        checkPosition: function (collidedPos, indicatorPos) {
+            return Math.abs(collidedPos.x - indicatorPos.x) <= this.data.tolerance &&
+                Math.abs(collidedPos.y - indicatorPos.y) <= this.data.tolerance &&
+                Math.abs(collidedPos.z - indicatorPos.z) <= this.data.tolerance;
+        },
+
+        setIndicator: function (active, collidedEl, indicator) {
+            if (active) {
+                indicator.setAttribute('material', 'color', 'green');
+                collidedEl.setAttribute('body', 'type: static');
+                fetch('/api/completarObjetivo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idObj: 5,
+                        completado: true
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Objetivo 5 completado correctamente');
+
+                            const objUI = document.querySelector('[data-objetivo="5"]');
+                            if (objUI) {
+                                const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                                iconoEstadoEl.setAttribute('src', '#tick-verde');
+                            }
+                        } else {
+                            console.error('Error al completar el objetivo:', data.message);
+                        }
+                    }).catch(error => {
+                        console.error('Error en la solicitud de completar objetivo:', error);
+                    });
+                this.checkTimer;
+                setTimeout(() => {
+                    this.showEndScreen();
+                }, 3000);
+            }
+        },
+        checkTimer: function () {
+            const timerElement = document.querySelector('#timer');
+            const timerValue = timerElement.getAttribute('text').value;
+
+            if (timerValue !== '0:00') {
+                fetch('/api/completarObjetivo', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        idObj: 16,
+                        completado: true
+                    })
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Objetivo 16 completado correctamente');
+
+                            const objUI = document.querySelector('[data-objetivo="16"]');
+                            if (objUI) {
+                                const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                                iconoEstadoEl.setAttribute('src', '#tick-verde');
+                            }
+                        } else {
+                            console.error('Error al completar el objetivo:', data.message);
+                        }
+                    }).catch(error => {
+                        console.error('Error en la solicitud de completar objetivo:', error);
+                    });
+            }
+        }
+    });
+
 
     //Cargar los glb con static body
     document.querySelector('#woodenTable').addEventListener('model-loaded', () => {
@@ -1242,47 +1579,39 @@ function iniciarFuncionesJuego() {
         { nombre: 'pimiento', modelo: './assets/pimiento.glb', scale: '1.5 1.5 1.5', color: '#FF0000', colorCooked: '#3E0000' },
         { nombre: 'cebolla', modelo: './assets/onion.glb', scale: '1.5 1.5 1.5', color: '#FFFFFF', colorCooked: '#FFFFFF' },
         { nombre: 'pimiento verde', modelo: './assets/pimientoVerde.glb', scale: '1.5 1.5 1.5', color: '#008000', colorCooked: '#008000' },
-
-        // Otros ingredientes...
     ];
 
-    // Ajuste en la función agregarIngredientes para incluir EsTallat
     function agregarIngredientes() {
         fetch('/ingredientes')
             .then(response => response.json())
             .then(data => {
                 if (!Array.isArray(data)) {
                     console.error('Se esperaba un array, se recibió:', data);
-                    // Manejar adecuadamente la situación, posiblemente mostrando un mensaje al usuario
-                    return; // Salir de la función si los datos no son un array
+                    return;
                 }
                 data.forEach((ingrediente, index) => {
-                    const positionX = index / 2; //+ 6;
+                    const positionX = index / 2 + 6;
                     const position = `${positionX} 1 -2.8`; //-5.3 0.57 -2.8 //positionX 1 -3
                     const ingredienteEncontrado = ingredientes.find(i => i.nombre === ingrediente.NomInteractuable);
                     const modelo = ingredienteEncontrado ? ingredienteEncontrado.modelo : './assets/default.glb';
                     const escala = ingredienteEncontrado ? ingredienteEncontrado.scale : '0.1 0.1 0.1';
-                    let entity; // Define fuera del if para usarlo después en ambos casos
+                    let entity;
 
-                    // Verificar si el ingrediente está cortado
                     if (ingrediente.EsTallat && nombreNivelActual === 'Tumbet') {
-                        // Añadir cuadrados que representan el ingrediente cortado
                         let container = document.createElement('a-entity');
                         container.setAttribute('position', position);
 
-                        // Añadir cuadrados que representan el ingrediente cortado
                         for (let i = 0; i < 6; i++) {
                             let piece = document.createElement('a-entity');
                             piece.setAttribute('geometry', {
                                 primitive: 'cylinder',
                                 radius: 0.05,
-                                height: 0.01  // Altura muy baja para simular la rodaja
+                                height: 0.01
                             });
-                            const offsetZ = i * 0.05; // Cambia 0.15 a la distancia deseada entre cada pieza
+                            const offsetZ = i * 0.05;
 
                             piece.setAttribute('position', `0 0 ${offsetZ}`);
                             piece.setAttribute('rotation', '40 0 0');
-                            // Añadir profundidad si es necesario
                             piece.setAttribute('material', 'color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347');
                             container.appendChild(piece);
                         }
@@ -1298,17 +1627,18 @@ function iniciarFuncionesJuego() {
                         let container = document.createElement('a-entity');
                         container.setAttribute('position', position);
 
-                        // Añadir cuadrados que representan el ingrediente cortado
                         for (let i = 0; i < 5; i++) {
-                            let piece = document.createElement('a-box');
-                            piece.setAttribute('width', '0.05');
-                            piece.setAttribute('height', '0.05');
-                            piece.setAttribute('depth', '0.05');
-                            const offsetX = Math.random() * 0.2 - 0.1; // Valor aleatorio entre -0.1 y 0.1 para la posición X
-                            const offsetZ = Math.random() * 0.2 - 0.1; // Valor aleatorio entre -0.1 y 0.1 para la posición Z
+                            let piece = document.createElement('a-entity');
+                            piece.setAttribute('geometry', {
+                                primitive: 'box',
+                                width: 0.05,
+                                height: 0.05,
+                                depth: 0.05
+                            });
+                            const offsetX = Math.random() * 0.2 - 0.1;
+                            const offsetZ = Math.random() * 0.2 - 0.1;
                             piece.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
                             piece.setAttribute('rotation', '40 0 0');
-                            // Añadir profundidad si es necesario
                             piece.setAttribute('material', 'color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347');
                             container.appendChild(piece);
                         }
@@ -1322,7 +1652,6 @@ function iniciarFuncionesJuego() {
                         document.querySelector('a-scene').appendChild(container);
 
                     } else {
-                        // Crear la entidad <a-entity> para el ingrediente no cortado
                         entity = document.createElement('a-entity');
                         entity.setAttribute('position', position);
                         entity.setAttribute('gltf-model', modelo);
@@ -1331,7 +1660,7 @@ function iniciarFuncionesJuego() {
                         entity.setAttribute('class', 'grab ingrediente');
                         entity.setAttribute('data-vida', ingrediente.PuntsVida);
                         entity.setAttribute('data-idInteractuable', ingrediente.IdInteractuable);
-                        entity.setAttribute('data-color', ingredienteEncontrado.color);  // Guardar el color en el elemento
+                        entity.setAttribute('data-color', ingredienteEncontrado.color);
                         entity.setAttribute('reset', `resetPosition: ${position}`);
                         if (ingrediente.NomInteractuable === 'tomate' && nombreNivelActual === 'Tumbet') {
                             entity.setAttribute('es-tomate', 'true');
@@ -1341,18 +1670,14 @@ function iniciarFuncionesJuego() {
                         }
                         document.querySelector('a-scene').appendChild(entity);
                     }
-                    // Crear y añadir la barra de progreso
                     console.log(nombreNivelActual);
                     console.log(ingrediente.NomInteractuable);
                     if (!ingrediente.EsTallat && entity) {
-                        // Revisa si el ingrediente es tomate y si estamos en el nivel correcto
                         if (ingrediente.NomInteractuable === 'tomate') {
                             if (nombreNivelActual === 'Coca de Trampo') {
-                                // Solo añadir la barra de progreso al tomate en el nivel 'coca de trampó'
                                 agregarBarraDeProgreso(entity, ingrediente, positionX);
                             }
                         } else {
-                            // Para otros ingredientes que no son tomate, siempre añadir la barra de progreso
                             agregarBarraDeProgreso(entity, ingrediente, positionX);
                         }
                     }
@@ -1406,36 +1731,33 @@ function iniciarFuncionesJuego() {
                 let vidaActual;
                 let progressBar;
                 const ingredienteGolpeado = e.detail.body.el;
-                const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
+                const sonidoCorte = document.querySelector('#cutSound');
                 if (ingredienteGolpeado.classList.contains('ingrediente')) {
-                    // Supongamos que cada ingrediente tiene un atributo 'data-vida'
                     const listoParaCortar = ingredienteGolpeado.getAttribute('data-listo-para-cortar') === 'true';
                     if (listoParaCortar) {
                         vidaActual = parseInt(ingredienteGolpeado.getAttribute('data-vida'));
-                        vidaActual = Math.max(0, vidaActual - 2); // Asegúrate de no tener valores negativos
+                        vidaActual = Math.max(0, vidaActual - 2);
                         ingredienteGolpeado.setAttribute('data-vida', vidaActual.toString());
 
-                        // Actualiza la barra de progreso, si es necesario
-                        // Supongamos que cada ingrediente tiene una referencia a su barra de progreso
-                        progressBar = ingredienteGolpeado.barraProgreso; // Asegúrate de haber establecido esta referencia
+                        if (sonidoCorte) {
+                            sonidoCorte.components.sound.playSound();
+                        }
+
+                        progressBar = ingredienteGolpeado.barraProgreso;
                         if (progressBar) {
-                            const vidaMaxima = 20; // O el valor que corresponda
-                            const anchoBarra = 0.2 * (vidaActual / vidaMaxima); // Ajusta '0.2' según el ancho máximo de tu barra
+                            const vidaMaxima = 20;
+                            const anchoBarra = 0.2 * (vidaActual / vidaMaxima);
                             progressBar.setAttribute('width', anchoBarra.toString());
                         }
                     }
                     if (vidaActual <= 12 && vidaActual > 5) {
                         progressBar.setAttribute('color', '#E58C1A');
-                        // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
                     }
-                    // Aquí podrías también manejar la lógica para cuando la vida llega a 0
                     if (vidaActual <= 5 && vidaActual > 0) {
                         progressBar.setAttribute('color', '#FF0000');
-                        // Por ejemplo, eliminar el ingrediente, mostrar una animación, etc.
                     }
-                    //Cambiar de ingrediente
                     if (vidaActual <= 0) {
-                        progressBar.remove();
+                        progressBar.parentNode.removeChild(progressBar);
                         this.mostrarIngredienteCortado(ingredienteGolpeado);
                     }
                 }
@@ -1443,27 +1765,24 @@ function iniciarFuncionesJuego() {
         },
 
         mostrarIngredienteCortado: function (ingredienteGolpeado) {
-            // Eliminar la representación actual del ingrediente no cortado
-            let color = ingredienteGolpeado.getAttribute('data-color');  // Obtener el color del atributo data
+            let color = ingredienteGolpeado.getAttribute('data-color');
             const idIngredienteGolpeado = ingredienteGolpeado.getAttribute('data-idInteractuable');
             ingredienteGolpeado.remove();
 
             if (nombreNivelActual === 'Tumbet') {
                 let cortado = document.createElement('a-entity');
                 cortado.setAttribute('position', '1 0.6 -3');
-                // Crear y mostrar el ingrediente cortado
                 for (let i = 0; i < 6; i++) {
                     let piece = document.createElement('a-entity');
                     piece.setAttribute('geometry', {
                         primitive: 'cylinder',
                         radius: 0.05,
-                        height: 0.01  // Altura muy baja para simular la rodaja
+                        height: 0.01
                     });
-                    const offsetZ = i * 0.05; // Cambia 0.15 a la distancia deseada entre cada pieza
+                    const offsetZ = i * 0.05;
 
                     piece.setAttribute('position', `0 0 ${offsetZ}`);
                     piece.setAttribute('rotation', '40 0 0');
-                    // Añadir profundidad si es necesario
                     piece.setAttribute('material', 'color', color);
                     cortado.appendChild(piece);
                 }
@@ -1477,18 +1796,19 @@ function iniciarFuncionesJuego() {
             } else {
                 let cortado = document.createElement('a-entity');
                 cortado.setAttribute('position', '1 0.6 -3');
-                // Crear y mostrar el ingrediente cortado
                 for (let i = 0; i < 5; i++) {
-                    let piece = document.createElement('a-box');
-                    piece.setAttribute('width', '0.05');
-                    piece.setAttribute('height', '0.05');
-                    piece.setAttribute('depth', '0.05');
-                    const offsetX = Math.random() * 0.2 - 0.1; // Valor aleatorio entre -0.1 y 0.1 para la posición X
-                    const offsetZ = Math.random() * 0.2 - 0.1; // Valor aleatorio entre -0.1 y 0.1 para la posición Z
+                    let piece = document.createElement('a-entity');
+                    piece.setAttribute('geometry', {
+                        primitive: 'box',
+                        width: 0.05,
+                        height: 0.05,
+                        depth: 0.05
+                    });
+                    const offsetX = Math.random() * 0.2 - 0.1;
+                    const offsetZ = Math.random() * 0.2 - 0.1;
                     piece.setAttribute('position', `${offsetX} 0 ${offsetZ}`);
                     piece.setAttribute('rotation', '40 0 0');
-                    // Añadir profundidad si es necesario
-                    piece.setAttribute('material', 'color', ingredienteEncontrado && ingredienteEncontrado.color ? ingredienteEncontrado.color : '#FF6347');
+                    piece.setAttribute('material', 'color', color);
                     cortado.appendChild(piece);
                 }
                 cortado.setAttribute('mixin', 'grabContainer');
@@ -1537,16 +1857,13 @@ function iniciarFuncionesJuego() {
             })
                 .then(response => response.json())
                 .then(data => {
-                    if (data.success && Array.isArray(data.objetivos)) { // Verifica que 'objetivos' es un array
+                    if (data.success && Array.isArray(data.objetivos)) {
                         data.objetivos.forEach(objetivo => {
-                            if (data.success && Array.isArray(data.objetivos)) { // Verifica que 'objetivos' es un array
+                            if (data.success && Array.isArray(data.objetivos)) {
                                 data.objetivos.forEach(objetivo => {
-                                    // Selecciona el elemento UI correspondiente usando el atributo data-objetivo
                                     const objUI = document.querySelector(`[data-objetivo="${objetivo.IdObj}"]`);
                                     if (objUI) {
-                                        // Encuentra el elemento que sirve como icono de estado dentro del elemento del objetivo
                                         const iconoEstadoEl = objUI.querySelector('.icono-estado');
-                                        // Cambia el atributo src del icono para reflejar el estado completado
                                         iconoEstadoEl.setAttribute('src', '#tick-verde');
                                     }
                                 });
@@ -1630,23 +1947,20 @@ function iniciarFuncionesJuego() {
         }
     });
 
-    //COMPONENTE DE CORTE
+    //COMPONENT DE TALL
     AFRAME.registerComponent('colocado-en-tabla', {
         init: function () {
             this.el.addEventListener('collide', (e) => {
                 if (e.detail.body.el) {
                     if (e.detail.body.el.id === 'tabla') {
-                        // Ajustar la posición del ingrediente al centro de la tabla
                         let tablaPos = document.querySelector('#tabla').getAttribute('position');
-                        this.el.setAttribute('position', { x: tablaPos.x, y: tablaPos.y + 0.1, z: tablaPos.z });
-                        // Cambiar a static-body para hacerlo inmóvil
+                        this.el.setAttribute('position', { x: tablaPos.x, y: tablaPos.y + 0.05, z: tablaPos.z });
                         this.el.setAttribute('dynamic-body', 'mass', 0);
                         this.el.removeAttribute('dynamic-body');
                         this.el.setAttribute('static-body', '');
                         this.el.setAttribute('data-listo-para-cortar', 'true');
                     }
                 }
-
             });
         }
     });
@@ -1654,19 +1968,25 @@ function iniciarFuncionesJuego() {
     //Vibrate on click
     AFRAME.registerComponent('vibrate-on-click', {
         schema: {
-            enabled: { default: true }  // Controla si el componente está activo
+            enabled: { default: true }
         },
 
         init: function () {
-            var el = this.el; // El elemento actual
-            var originalPosition = el.object3D.position.clone(); // Posición original
+            var el = this.el;
+            var originalPosition = el.object3D.position.clone();
+            this.blenderSound = document.querySelector('#blenderSound');
 
             el.addEventListener('click', () => {
-                if (!this.data.enabled) return;  // Salir si no se permite la interacción
+                if (!this.data.enabled) return;
+                setTimeout(() => {
+                    if (this.blenderSound) {
+                        this.blenderSound.components.sound.playSound();
+                    }
+                }, 300);
 
-                this.data.enabled = false;  // Desactivar clics adicionales
-                var duration = 8000; // Duración de la vibración
-                var intervalTime = 100; // Intervalo entre cambios de posición
+                this.data.enabled = false;
+                var duration = 7000;
+                var intervalTime = 100;
                 var maxIterations = duration / intervalTime;
                 var counter = 0;
 
@@ -1678,16 +1998,42 @@ function iniciarFuncionesJuego() {
                         el.object3D.position.z = originalPosition.z + Math.random() * 0.02 * direction;
                         counter++;
                     } else {
-                        el.object3D.position.copy(originalPosition); // Restaurar posición original
+                        el.object3D.position.copy(originalPosition);
                         clearInterval(interval);
-                        this.data.enabled = true; // Re-activar clics
+                        this.data.enabled = true;
 
-                        // Comprobar si hay un tomate en la batidora antes de eliminarlo
                         let tomate = document.querySelector('[en-batidora="true"]');
                         if (tomate) {
-                            tomate.parentNode.removeChild(tomate);  // Eliminar el tomate
+                            tomate.parentNode.removeChild(tomate);
                             let bol = document.querySelector('#bol');
                             bol.setAttribute('add-tomato-to-bowl', '');
+                            // Completar objectiu especific
+                            fetch('/api/completarObjetivo', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    idObj: 12,
+                                    completado: true
+                                })
+                            }).then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        console.log('Objetivo 12 completado correctamente');
+
+                                        // Actualizar el ícono del objetivo a verde
+                                        const objUI = document.querySelector('[data-objetivo="12"]');
+                                        if (objUI) {
+                                            const iconoEstadoEl = objUI.querySelector('.icono-estado');
+                                            iconoEstadoEl.setAttribute('src', '#tick-verde');
+                                        }
+                                    } else {
+                                        console.error('Error al completar el objetivo:', data.message);
+                                    }
+                                }).catch(error => {
+                                    console.error('Error en la solicitud de completar objetivo:', error);
+                                });
                         }
                     }
                 }, intervalTime);
@@ -1697,21 +2043,16 @@ function iniciarFuncionesJuego() {
 
     AFRAME.registerComponent('add-tomato-to-bowl', {
         init: function () {
-            // Crear un objeto de geometría que represente el semicírculo
-            var geometry = new THREE.CircleGeometry(0.2, 32, Math.PI / 2, Math.PI);  // Radio de 0.2, 32 segmentos, de PI/2 a PI
-            var material = new THREE.MeshBasicMaterial({ color: 0xFF6347, side: THREE.DoubleSide });  // Color rojo tomate
-            var circle = new THREE.Mesh(geometry, material);
+            var geometry = new THREE.SphereGeometry(0.1, 16, 16);
+            var material = new THREE.MeshBasicMaterial({ color: 0xFF6347, side: THREE.DoubleSide });
+            var sphere = new THREE.Mesh(geometry, material);
 
-            // Rotar el semicírculo para que parezca que está dentro del bol
-            circle.rotation.x = -Math.PI / 2;
-            circle.position.y = 0.05;  // Posicionado ligeramente por encima del fondo del bol para evitar z-fighting
+            sphere.position.y = 0.3;
 
-            // Añadir el semicírculo al objeto de este componente
-            this.el.setObject3D('semicircle', circle);
+            this.el.setObject3D('semicircle', sphere);
             this.el.setAttribute('tomate-salsa', true);
         },
         remove: function () {
-            // Asegurarse de eliminar el semicírculo cuando se remueva el componente
             if (this.el.getObject3D('semicircle')) {
                 this.el.removeObject3D('semicircle');
             }
@@ -1722,19 +2063,15 @@ function iniciarFuncionesJuego() {
     AFRAME.registerComponent('colocado-en-batidora', {
         init: function () {
             this.el.addEventListener('collide', (e) => {
-                // Comprobar si el elemento con el que colisiona es la batidora
                 if (e.detail.body.el.id === 'shaker') {
-                    // Ajustar la posición del tomate para que quede en la abertura de la batidora
                     let shakerPos = document.querySelector('#shaker').getAttribute('position');
                     this.el.setAttribute('position', { x: shakerPos.x, y: shakerPos.y + 0.4, z: shakerPos.z - 0.1 });
 
-                    // Cambiar a static-body para hacerlo inmóvil
                     this.el.setAttribute('dynamic-body', 'mass', 0);
                     this.el.setAttribute('en-batidora', 'true');
                     this.el.removeAttribute('dynamic-body');
                     this.el.setAttribute('static-body', '');
 
-                    // Se podría marcar como "en batidora" para cualquier otra lógica que se necesite
                     this.el.setAttribute('data-en-batidora', 'true');
                     this.el.setAttribute('data-cocinado', true);
                 }
@@ -1760,7 +2097,7 @@ function iniciarFuncionesJuego() {
             this.el.addEventListener('click', () => {
                 progressBar.setAttribute('material', { color: '#FF2D00' });
                 var width = 0;
-                var duration = 8000; // Duración total en milisegundos
+                var duration = 7000; // Duración total en milisegundos
                 var intervalTime = 100; // Intervalo de tiempo para actualizar la barra
                 var maxIterations = duration / intervalTime;
                 var counter = 0;
@@ -1831,9 +2168,9 @@ function iniciarFuncionesJuego() {
         }
     });
 
-    AFRAME.registerComponent('puerta-horno', {
+    AFRAME.registerComponent('horno', {
         schema: {
-            cookingTime: { type: 'number', default: 5000 }, // Tiempo de cocción en milisegundos
+            cookingTime: { type: 'number', default: 10000 }, // Tiempo de cocción en milisegundos
             tolerance: { type: 'number', default: 0.3 } // Tolerancia de colisión
         },
         init: function () {
@@ -1841,71 +2178,70 @@ function iniciarFuncionesJuego() {
             this.rotated = false; // Estado inicial de la puerta
             this.isFirstClick = true;
             this.pastaInOven = null; // Pasta que está dentro del horno
-            this.sound = document.querySelector('#doorSound'); // Sonido de la puerta
+            this.sound = document.querySelector('#doorSound');
+            this.ovenSound = document.querySelector('#ovenSound');
+            this.ovenReady = document.querySelector('#ovenReady');
             var puertaHorno = document.querySelector('.puerta-horno');
             this.cookingIndicator = document.getElementById('cooking-indicator');
             this.el.addEventListener('collide', this.handleCollision.bind(this));
-            this.humos = []; // Referencia al humo
+            this.humos = [];
 
             this.el.addEventListener('click', () => {
+                if (this.el.getAttribute('id') === 'horno' || this.el.getAttribute('id') === 'puertaHorno') {
 
-                if (this.isFirstClick) {
-                    console.log("CLICK");
-                    puertaHorno.setAttribute('animation', 'property: rotation; to: 90 -90 0; dur: 1000; easing: linear');
-                    puertaHorno.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
-                    this.isFirstClick = false;
-                    this.sound.components.sound.playSound();
-                    return;
-                }
+                    if (this.isFirstClick) {
+                        console.log("CLICK");
+                        puertaHorno.setAttribute('animation', 'property: rotation; to: 90 -90 0; dur: 1000; easing: linear');
+                        puertaHorno.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
+                        this.isFirstClick = false;
+                        this.sound.components.sound.playSound();
+                        return;
+                    }
 
-                if (this.isCooking) {
-                    console.log("La cocción está en curso. No se puede abrir la puerta.");
-                    return; // No hacer nada si la cocción está en curso
-                }
+                    if (this.isCooking) {
+                        console.log("La cocción está en curso. No se puede abrir la puerta.");
+                        return;
+                    }
 
-                if (!this.rotated) {
-                    // Si no está cocinando, solo cierra la puerta
-                    puertaHorno.setAttribute('animation', 'property: rotation; to: 90 0 0; dur: 1000; easing: linear');
-                    puertaHorno.setAttribute('animation__position', 'property: position; to: 0 0 1; dur: 1000; easing: linear');
-                    this.rotated = true;
+                    if (!this.rotated) {
+                        puertaHorno.setAttribute('animation', 'property: rotation; to: 90 0 0; dur: 1000; easing: linear');
+                        puertaHorno.setAttribute('animation__position', 'property: position; to: 0 0 1; dur: 1000; easing: linear');
+                        this.rotated = true;
+
+                    } else {
+                        puertaHorno.setAttribute('animation', 'property: rotation; to: 90 -90 0; dur: 1000; easing: linear');
+                        puertaHorno.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
+                        this.rotated = false;
+                    }
                     if (this.pastaInOven) {
                         this.startCooking();
                     }
-                } else {
-                    // Si no está cocinando, solo abre la puerta
-                    puertaHorno.setAttribute('animation', 'property: rotation; to: 90 -90 0; dur: 1000; easing: linear');
-                    puertaHorno.setAttribute('animation__position', 'property: position; to: -1 0 2; dur: 1000; easing: linear');
-                    this.rotated = false;
-                }
 
-                // Reproducir el sonido de la puerta
-                if (this.sound && this.sound.components.sound) {
-                    this.sound.components.sound.playSound();
+                    if (this.sound && this.sound.components.sound) {
+                        this.sound.components.sound.playSound();
+                    }
                 }
             });
         },
         handleCollision: function (evt) {
             let collidedEl = evt.detail.body.el;
-            // Verificar si el elemento colisionado es el cookingIndicator
             if (collidedEl) {
+                console.log(collidedEl);
                 if (collidedEl.getAttribute('id') === 'cooking-indicator') {
                     let indicatorPos = new THREE.Vector3();
                     let cocaPos = new THREE.Vector3();
 
-                    // Obtener posiciones globales
                     collidedEl.object3D.getWorldPosition(indicatorPos);
                     this.el.object3D.getWorldPosition(cocaPos);
 
-                    // Verificar si la colisión está dentro de la tolerancia
                     if (this.checkPosition(cocaPos, indicatorPos)) {
                         console.log("La coca de trampó ha tocado el indicador de cocción.");
-                        if (!this.isCooking && this.rotated) { // Solo comienza a cocinar si la puerta está cerrada
+                        if (!this.isCooking /*&& this.rotated*/) {
                             this.startCooking();
                         }
                     }
                 }
             }
-
         },
         checkPosition: function (collidedPos, indicatorPos) {
             return Math.abs(collidedPos.x - indicatorPos.x) <= this.data.tolerance &&
@@ -1915,6 +2251,9 @@ function iniciarFuncionesJuego() {
         startCooking: function () {
             if (!this.isCooking) {
                 this.isCooking = true;
+                if (this.ovenSound) {
+                    this.ovenSound.components.sound.playSound();
+                }
                 console.log("COCINANDO");
                 this.cookingIndicator.setAttribute('material', 'color: green; opacity: 0.5');
                 this.el.setAttribute('body', 'type: static-body');
@@ -1929,7 +2268,7 @@ function iniciarFuncionesJuego() {
                     if (this.pastaInOven) {
                         this.pastaInOven.setAttribute('body', 'type: dynamic-body');
                         this.pastaInOven.setAttribute('color', '#AD7A3C');
-                        this.pastaInOven = null;
+                        this.pastaInOven.setAttribute('data-pasta-cooked', 'true');
                     }
                     this.removeSmoke(); // Quitar el humo
                     console.log("SE HA COCINADO");
@@ -1942,14 +2281,14 @@ function iniciarFuncionesJuego() {
                 { x: -7, y: 2, z: -3 },
                 { x: -8, y: 2, z: -3 }
             ];
-    
+
             const sceneEl = document.querySelector('a-scene');
-    
+
             positions.forEach(pos => {
                 const humo = document.createElement('a-entity');
                 humo.setAttribute('geometry', {
                     primitive: 'sphere',
-                    radius: 0.5
+                    radius: 0.2
                 });
                 humo.setAttribute('material', {
                     color: '#666666',
@@ -1970,12 +2309,18 @@ function iniciarFuncionesJuego() {
         },
         removeSmoke: function () {
             const sceneEl = document.querySelector('a-scene');
+            if (this.ovenSound) {
+                this.ovenSound.components.sound.stopSound();
+            }
+            if (this.ovenReady) {
+                this.ovenReady.components.sound.playSound();
+            }
             this.humos.forEach(humo => {
                 sceneEl.removeChild(humo);
             });
             this.humos = [];
         }
-        });
+    });
 
     AFRAME.registerComponent('foo', {
         init: function () {
@@ -2054,48 +2399,42 @@ function iniciarFuncionesJuego() {
     const idPartida = queryParams.get('partidaId');
     console.log(idPartida);
 
-    // Por ejemplo, cargar los objetivos para esta IdPartida
     cargarObjetivosDePartida();
 
     function cargarObjetivosDePartida() {
-        fetch(`/obtenerObjetivos`) // Ya no necesitas pasar el idPartida en la URL
+        fetch(`/obtenerObjetivos`)
             .then(response => response.json())
             .then(objetivos => {
-                const sceneEl = document.querySelector('a-scene'); // Encuentra el elemento de la escena
+                const sceneEl = document.querySelector('a-scene');
 
                 objetivos.forEach((objetivo, index) => {
-                    // Crea el plane para el objetivo
+                    //Creacio                    
                     const objetivoEl = document.createElement('a-plane');
-                    objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 2 }); // Ajusta la posición según necesites
+                    objetivoEl.setAttribute('position', { x: 8, y: 5 - index * 0.4, z: 1 });
                     objetivoEl.setAttribute('rotation', '0 -90 0');
                     objetivoEl.setAttribute('width', '7');
                     objetivoEl.setAttribute('height', '0.4');
                     objetivoEl.setAttribute('color', '#FFF');
-                    objetivoEl.classList.add('objetivo');  // Añade la clase 'objetivo'
+                    objetivoEl.classList.add('objetivo');
                     objetivoEl.setAttribute('data-objetivo', objetivo.IdObj);
 
-                    // Crea el texto para el objetivo
                     const textoEl = document.createElement('a-text');
                     textoEl.setAttribute('value', objetivo.NomObj);
                     textoEl.setAttribute('align', 'center');
                     textoEl.setAttribute('color', '#000');
-                    textoEl.setAttribute('position', '-1 0 0.1'); // Ajusta según la necesidad
+                    textoEl.setAttribute('position', '-1 0 0.1');
 
-                    // Añade el texto al plane del objetivo
                     objetivoEl.appendChild(textoEl);
 
-                    // Crea el icono de estado (tick verde o X roja)
                     const iconoEstadoEl = document.createElement('a-image');
-                    iconoEstadoEl.className = 'icono-estado';  // Asegúrate de que esta clase se añade correctamente
+                    iconoEstadoEl.className = 'icono-estado';
                     iconoEstadoEl.setAttribute('src', objetivo.Completado ? '#tick-verde' : '#x-roja');
                     iconoEstadoEl.setAttribute('position', '2.3 0 0.1');
                     iconoEstadoEl.setAttribute('height', '0.3');
                     iconoEstadoEl.setAttribute('width', '0.3');
 
-                    // Añade el icono al plane del objetivo
                     objetivoEl.appendChild(iconoEstadoEl);
 
-                    // Añade el plane del objetivo a la escena
                     sceneEl.appendChild(objetivoEl);
                 });
             })
